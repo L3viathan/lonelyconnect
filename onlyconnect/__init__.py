@@ -11,7 +11,6 @@ from . import auth
 from .models import State, User, BuzzState
 
 CODES = {}
-TOKENS = {}
 BUZZLOCK = Lock()
 STATE = State()
 
@@ -27,13 +26,6 @@ async def index():
 
 @app.post("/login")
 async def login(response: Response, request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
-    # to implement in client:
-    # HTTP POST request to /login with the following form-encoded fields:
-    # - grant_type == "password"
-    # - username = "anything, since we ignore it" (but probably non-empty)
-    # - password = "ABC123" (our token)
-    # the response is JSON, containing the `access_token` and the `token_type` ("bearer").
-
     # username is actually ignored. These are random single-use non-critical codes.
     username = CODES.pop(form_data.password, None)
     if not username:
@@ -44,7 +36,7 @@ async def login(response: Response, request: Request, form_data: OAuth2PasswordR
         )
     token = random_token(32)
     user = User(name=username)
-    TOKENS[token] = user
+    auth.TOKENS[token] = user
     print(f"User {user} logged in with token {token}")
     if user.is_player:
         setattr(STATE, username, user)
@@ -94,16 +86,16 @@ async def buzz(user: User = Depends(auth.player)):
     return STATE.buzz
 
 
-@app.put("/buzz/<state>")
+@app.put("/buzz/{state}")
 async def set_buzz(state: BuzzState, user: User = Depends(auth.admin)):
     async with BUZZLOCK:
-        STATE.buzz = state
+        STATE.buzz = state.value
     return STATE.buzz
 
 
 @app.post("/ui/buzzer")
 async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
-    token = user.get_token(TOKENS)
+    token = user.get_token(auth.TOKENS)
     return templates.TemplateResponse(
         "buzzer.html",
         {
@@ -113,11 +105,23 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
             else "disabled",  # user.name) else "disabled",
             "buzzer_color": (
                 "red"
-                if STATE.buzz in ("left", "right")  # == user.name
+                if STATE.buzz == user.name
                 else "blue"
-                if STATE.buzz == "active"
+                if STATE.buzz in ("active", f"active-{user.name}")
                 else "grey"
             ),
+            "token": token,
+        },
+    )
+
+
+@app.post("/ui/admin")
+async def ui_admin(request: Request, user: User = Depends(auth.admin)):
+    token = user.get_token(auth.TOKENS)
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request,
             "token": token,
         },
     )
@@ -136,7 +140,7 @@ async def ui_login(request: Request):
 @app.post("/ui/redirect")
 async def redirect(request: Request):
     form_data = await request.form()
-    user = user_from_token(form_data.get("access_token"))
+    user = auth.logged_in(form_data.get("access_token"))
     return templates.TemplateResponse(
         "redirect.html",
         {
