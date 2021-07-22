@@ -1,0 +1,5 @@
+<html>
+    <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+    <div hx-push-url="true" hx-post="/ui/{{ "buzzer" if role == "player" else "admin" if role == "admin" else "" }}" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="load" hx-swap="outerHTML" id="main">
+    </div>
+</html>

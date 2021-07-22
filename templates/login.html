@@ -1,0 +1,21 @@
+<html>
+    <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+    <input style="width: 100%; height: 100%; font-size: 48pt;" type="text" name="password" minlength="6" maxlength="6" hx-post="/login" hx-trigger="keyup changed" hx-vals='{"grant_type": "password", "username": "nobody"}' hx-target="#response"></input>
+    <div style="display: none;" id="response"></div>
+    <script>
+        document.body.addEventListener("ocResponse", function(evt) {
+            console.log("triggered event");
+            var response = JSON.parse(document.querySelector("#response").innerText);
+            var form = document.createElement("form");
+            form.action="/ui/redirect";
+            form.method = "POST";
+            var input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "access_token";
+            input.value = response.access_token;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        });
+    </script>
+</html>

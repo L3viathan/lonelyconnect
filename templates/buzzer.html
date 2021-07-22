@@ -1,6 +1,6 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
-    <div hx-get="/ui/buzzer/inner" hx-trigger="every 1s" hx-swap="outerHTML" id="buzzer">
+    <div hx-post="/ui/buzzer" hx-trigger="every 1s" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-swap="outerHTML" id="main">
         <div id="buzzerbutton" hx-post="/buzz" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="click" style="background-color: {{ buzzer_color }}; width:100%; height:100%;" disabled="{{ disabled }}">
             BUZZ
         </div>
