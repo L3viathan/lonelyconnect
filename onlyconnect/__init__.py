@@ -107,20 +107,10 @@ async def clear_buzz(user: User = Depends(user_from_token)):
 
 @app.get("/ui/buzzer")
 async def ui_buzzer(request: Request):  # , user: User = Depends(user_from_token)):
-    return templates.TemplateResponse(
-        "buzzer.html",
-        {
-            "request": request,
-        },
-    )
-
-
-@app.get("/ui/buzzer/inner")
-async def ui_buzzer(request: Request):  # , user: User = Depends(user_from_token)):
     # FIXME: take from request
     token = [token for token, user in TOKENS.items() if user.name == "left"][0]
     return templates.TemplateResponse(
-        "buzzer_inner.html",
+        "buzzer.html",
         {
             "request": request,
             "disabled": ""
