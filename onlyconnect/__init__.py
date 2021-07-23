@@ -1,6 +1,8 @@
 import random
 from asyncio import Lock
 
+import markupsafe
+
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
@@ -93,6 +95,12 @@ async def set_buzz(state: BuzzState, user: User = Depends(auth.admin)):
     return STATE.buzz
 
 
+@app.post("/score/{username}")
+async def add_to_score(request: Request, username: str, user: User = Depends(auth.admin)):
+    form_data = await request.form()
+    getattr(STATE, username).score += int(form_data["points"])
+
+
 @app.post("/ui/buzzer")
 async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
     token = user.get_token(auth.TOKENS)
@@ -110,7 +118,7 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
                 if STATE.buzz in ("active", f"active-{user.name}")
                 else "grey"
             ),
-            "token": token,
+            "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
         },
     )
 
@@ -122,7 +130,7 @@ async def ui_admin(request: Request, user: User = Depends(auth.admin)):
         "admin.html",
         {
             "request": request,
-            "token": token,
+            "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
         },
     )
 
@@ -145,7 +153,7 @@ async def redirect(request: Request):
         "redirect.html",
         {
             "request": request,
-            "token": form_data["access_token"],
+            "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {form_data["access_token"]}"}}' """),
             "role": "admin" if user.is_admin else "player" if user.is_player else None,
         },
     )

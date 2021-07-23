@@ -1,7 +1,10 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
-    <div style="width: 25%; border: 1px solid black" hx-swap="none" id="buzz_active" hx-put="/buzz/active" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="click, keyup[key=='a'] from:body">buzz: [A]ctive</div>
-    <div style="width: 25%; border: 1px solid black" hx-swap="none" id="buzz_inactive" hx-put="/buzz/inactive" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="click, keyup[key=='x'] from:body">buzz: Ina[X]tive</div>
-    <div style="width: 25%; border: 1px solid black" hx-swap="none" id="buzz_active_left" hx-put="/buzz/active-left" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="click, keyup[key=='l'] from:body">buzz: [L]eft only</div>
-    <div style="width: 25%; border: 1px solid black" hx-swap="none" id="buzz_active_right" hx-put="/buzz/active-right" hx-headers='{"Authorization": "Bearer {{ token }}"}' hx-trigger="click, keyup[key=='r'] from:body">buzz: [R]ight only</div>
+    <button hx-swap="none" id="buzz_active" hx-put="/buzz/active" {{ authheader }} hx-trigger="click, keyup[key=='a'] from:body">buzz: [a]ctive</button>
+    <button hx-swap="none" id="buzz_inactive" hx-put="/buzz/inactive" {{ authheader }} hx-trigger="click, keyup[key=='x'] from:body">buzz: Ina[x]tive</button>
+    <button hx-swap="none" id="buzz_active_left" hx-put="/buzz/active-left" {{ authheader }} hx-trigger="click, keyup[key=='l'] from:body">buzz: [l]eft only</button>
+    <button hx-swap="none" id="buzz_active_right" hx-put="/buzz/active-right" {{ authheader }} hx-trigger="click, keyup[key=='r'] from:body">buzz: [r]ight only</button>
+    <input name="points" placeholder="points"></input>
+    <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
+    <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
 </html>
