@@ -79,13 +79,16 @@ async def state():
 
 
 @app.get("/stage")
-async def state():
+async def stage():
     return GAME.stage()
 
 
 @app.get("/next")
 async def state(user: User = Depends(auth.admin)):
-    return next(GAME)
+    try:
+        return next(GAME)
+    except StopIteration:
+        return {}
 
 
 @app.post("/buzz")
@@ -112,6 +115,29 @@ async def set_buzz(state: BuzzState, user: User = Depends(auth.admin)):
 async def add_to_score(request: Request, username: str, user: User = Depends(auth.admin)):
     form_data = await request.form()
     STATE.points[username] += int(form_data["points"])
+
+
+@app.get("/ui/stage")
+async def ui_stage(request: Request):
+    stage = GAME.stage()
+    if GAME.part and isinstance(GAME.part, game.Connections):  # includes sequences
+        return templates.TemplateResponse(
+            "connections.html",
+            {
+                "request": request,
+                # the following two lines are ugly, but necessary at the moment
+                "answer": None,
+                "steps": [],
+                **stage,
+            },
+        )
+    else:
+        return templates.TemplateResponse(
+            "stage.html",
+            {
+                "request": request,
+            },
+        )
 
 
 @app.post("/ui/buzzer")

@@ -17,7 +17,7 @@ class Game:
         """Return data for the current stage."""
         if self.part:
             return self.part.stage()
-        return None # TODO: out of parts? End credits? or also in between parts?
+        return {}
 
     def __iter__(self):
         return self
@@ -45,7 +45,7 @@ class Part:
     def stage(self):
         if self.task:
             return self.task.stage()
-        return None
+        return {}
 
     def __iter__(self):
         return self
