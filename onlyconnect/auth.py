@@ -3,10 +3,11 @@ from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")  # camel case because OpenAPI
 TOKENS = {}
+USERS = {}
 
 
 def logged_in(token: str = Depends(oauth2_scheme)):
-    return TOKENS[token]
+    return USERS[TOKENS[token]]
 
 def player(token: str = Depends(oauth2_scheme)):
     user = logged_in(token)

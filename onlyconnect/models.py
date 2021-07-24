@@ -1,4 +1,5 @@
 from enum import Enum
+from collections import Counter
 from typing import Literal, Optional
 from pydantic import BaseModel
 
@@ -26,7 +27,7 @@ class User(BaseModel):
 
     def get_token(self, tokens):
         for token in tokens:
-            if tokens[token] == self:
+            if tokens[token] == self.name:
                 return token
         raise RuntimeError(f"Couldn't find token for user {self.name}")
 
@@ -36,7 +37,6 @@ class State(BaseModel):
     """
     Contains all PUBLIC information about the current game state.
     """
-    left: Optional[User]
-    right: Optional[User]
+    points: dict = {"left": 0, "right": 0}
     buzz: BuzzState = "inactive"
     stage: Literal["connections", "sequences", "wall", "missing vowels"] = "connections"

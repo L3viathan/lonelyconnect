@@ -37,11 +37,8 @@ async def login(response: Response, request: Request, form_data: OAuth2PasswordR
             headers={"WWW-Authenticate": "Bearer"},
         )
     token = random_token(32)
-    user = User(name=username)
-    auth.TOKENS[token] = user
-    print(f"User {user} logged in with token {token}")
-    if user.is_player:
-        setattr(STATE, username, user)
+    auth.TOKENS[token] = username
+    print(f"User {username} logged in with token {token}")
     if request.headers.get("HX-Request"):
         response.headers["HX-Trigger-After-Settle"] = "ocResponse"
     return {"access_token": token, "token_type": "bearer"}
@@ -57,6 +54,7 @@ async def startup():
         code = random_token(6)
         print(f"CODE for {username}:", code)
         CODES[code] = username
+        auth.USERS[username] = User(name=username)
 
 
 @app.get("/codes")
@@ -98,7 +96,7 @@ async def set_buzz(state: BuzzState, user: User = Depends(auth.admin)):
 @app.post("/score/{username}")
 async def add_to_score(request: Request, username: str, user: User = Depends(auth.admin)):
     form_data = await request.form()
-    getattr(STATE, username).score += int(form_data["points"])
+    STATE.points[username] += int(form_data["points"])
 
 
 @app.post("/ui/buzzer")
