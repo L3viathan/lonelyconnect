@@ -5,6 +5,6 @@
     <button hx-swap="none" id="buzz_active_left" hx-put="/buzz/active-left" {{ authheader }} hx-trigger="click, keyup[key=='l'] from:body">buzz: [l]eft only</button>
     <button hx-swap="none" id="buzz_active_right" hx-put="/buzz/active-right" {{ authheader }} hx-trigger="click, keyup[key=='r'] from:body">buzz: [r]ight only</button>
     <input name="points" placeholder="points"></input>
-    <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
-    <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
+    <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-swap="none" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
+    <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-swap="none" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
 </html>

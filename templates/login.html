@@ -1,6 +1,6 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
-    <input style="width: 100%; height: 100%; font-size: 48pt;" type="text" name="password" minlength="6" maxlength="6" hx-post="/login" hx-trigger="keyup changed" hx-vals='{"grant_type": "password", "username": "nobody"}' hx-target="#response"></input>
+    <input style="width: 100%; height: 100%; font-size: 48pt;" type="text" name="password" minlength="6" maxlength="6" hx-post="/login" hx-trigger="keyup changed delay:2s" hx-vals='{"grant_type": "password", "username": "nobody"}' hx-target="#response"></input>
     <div style="display: none;" id="response"></div>
     <script>
         document.body.addEventListener("ocResponse", function(evt) {

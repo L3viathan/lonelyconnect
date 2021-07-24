@@ -29,7 +29,7 @@ async def index():
 @app.post("/login")
 async def login(response: Response, request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     # username is actually ignored. These are random single-use non-critical codes.
-    username = CODES.pop(form_data.password, None)
+    username = CODES.pop(form_data.password.upper(), None)
     if not username:
         raise HTTPException(
             status_code=401,
