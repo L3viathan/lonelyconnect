@@ -2,6 +2,7 @@ import random
 from asyncio import Lock
 
 import markupsafe
+import yaml
 
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
 from fastapi.templating import Jinja2Templates
@@ -11,10 +12,12 @@ from starlette.responses import RedirectResponse
 
 from . import auth
 from .models import State, User, BuzzState
+from .game import Game
 
 CODES = {}
 BUZZLOCK = Lock()
 STATE = State()
+GAME = Game()
 
 app = FastAPI()
 
@@ -55,6 +58,8 @@ async def startup():
         print(f"CODE for {username}:", code)
         CODES[code] = username
         auth.USERS[username] = User(name=username)
+    with open("test.yml") as f:
+        GAME.load(yaml.load(f))
 
 
 @app.get("/codes")
@@ -71,6 +76,16 @@ async def codes(user: User = Depends(auth.admin)):
 @app.get("/state")
 async def state():
     return STATE
+
+
+@app.get("/stage")
+async def state():
+    return GAME.stage()
+
+
+@app.get("/next")
+async def state(user: User = Depends(auth.admin)):
+    return next(GAME)
 
 
 @app.post("/buzz")
