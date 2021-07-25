@@ -1,9 +1,7 @@
-<html>
-    <script src="https://unpkg.com/htmx.org@1.5.0"></script>
-    <div id="main" hx-get="/ui/stage" hx-trigger="every 2s" hx-swap="outerHTML">
+{% extends "stage.html" %}
+{% block main %}
         <div id="answer">{{ answer or "" }}</div>
         {% for step in steps %}
             <button style="width: 25%;">{{ step }}</button>
         {% endfor %}
-    </div>
-</html>
+{% endblock %}
