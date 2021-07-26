@@ -120,23 +120,29 @@ async def add_to_score(request: Request, username: str, user: User = Depends(aut
 @app.get("/ui/stage")
 async def ui_stage(request: Request):
     stage = GAME.stage()
+    base_dict = {
+        "request": request,
+        "leftname": auth.USERS["left"].descriptive_name or "left",
+        "rightname": auth.USERS["right"].descriptive_name or "right",
+        "leftscore": auth.USERS["left"].score,
+        "rightscore": auth.USERS["right"].score,
+    }
+
     if GAME.part and isinstance(GAME.part, game.Connections):  # includes sequences
         return templates.TemplateResponse(
             "connections.html",
             {
-                "request": request,
+                **base_dict,
                 # the following two lines are ugly, but necessary at the moment
-                "answer": None,
-                "steps": [],
+                # "answer": None,
+                # "steps": [],
                 **stage,
             },
         )
     else:
         return templates.TemplateResponse(
             "stage.html",
-            {
-                "request": request,
-            },
+            base_dict,
         )
 
 
