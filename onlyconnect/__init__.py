@@ -91,6 +91,16 @@ async def state(user: User = Depends(auth.admin)):
         return {}
 
 
+@app.get("/actions")
+async def state(user: User = Depends(auth.admin)):
+    return GAME.actions()
+
+
+@app.post("/action/{key}")
+async def state(user: User = Depends(auth.admin), key: str):
+    return GAME.action(key, STATE)
+
+
 @app.post("/buzz")
 async def buzz(user: User = Depends(auth.player)):
     async with BUZZLOCK:

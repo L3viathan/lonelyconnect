@@ -4,6 +4,7 @@ class Game:
     def __init__(self):
         self.parts = deque()
         self.part = None
+        self.timer = None
 
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
@@ -18,6 +19,18 @@ class Game:
         if self.part:
             return self.part.stage()
         return {}
+
+    def actions(self):
+        """Return all available actions at this point in time."""
+        if self.part:
+            return self.part.actions()
+        return []
+
+    def action(self, key, state):
+        """Perform an action"""
+        if self.part:
+            return self.part.action(key, state)
+        return None
 
     def __iter__(self):
         return self
@@ -46,6 +59,18 @@ class Part:
         if self.task:
             return self.task.stage()
         return {}
+
+    def actions(self):
+        """Return all available actions at this point in time."""
+        if self.task:
+            return self.task.actions()
+        return []
+
+    def action(self, key, state):
+        """Perform an action"""
+        if self.task:
+            return self.task.action(key, state)
+        return None
 
     def __iter__(self):
         return self
@@ -89,6 +114,36 @@ class Question:
             ],
             "answer": self.answer if self.n_shown == 5 else None,
         }
+
+    def actions(self):
+        """Return all available actions at this point in time."""
+        available = []
+        if self.n_shown > 4:
+            return available
+        available.append(
+            ("award_primary", "Give points to primary team")
+        )
+        if self.n_shown == 4:
+            available.append(
+                ("award_bonus", "Give 1 point to other team")
+            )
+        return available
+
+    def action(self, key, state):
+        """Perform an action"""
+        if key not in [k for (k, _desc) in self.actions()]:
+            return None
+        if key.startswith("award_"):
+            _, __, team = state.buzz.rpartition("-")
+            if not team:
+                raise RuntimeError("unknown active team")
+            if key == "award_primary":
+                state.points[team] += {1: 5, 2: 3, 3: 2, 4: 1}[self.n_shown]
+            elif key == "award_bonus":
+                state.points["left" if team == "right" else "right"] += 1
+            else:
+                raise RuntimeError("unknown award_ key")
+            self.n_shown = 5
 
     def __iter__(self):
         return self
