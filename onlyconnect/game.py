@@ -1,10 +1,11 @@
 from collections import deque
 
 class Game:
-    def __init__(self):
+    def __init__(self, state):
         self.parts = deque()
         self.part = None
         self.timer = None
+        self.state = state
 
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
@@ -23,13 +24,13 @@ class Game:
     def actions(self):
         """Return all available actions at this point in time."""
         if self.part:
-            return self.part.actions()
+            return self.part.actions(self.state)
         return []
 
-    def action(self, key, state):
+    def action(self, key):
         """Perform an action"""
         if self.part:
-            return self.part.action(key, state)
+            return self.part.action(key, self.state)
         return None
 
     def __iter__(self):
@@ -60,10 +61,10 @@ class Part:
             return self.task.stage()
         return {}
 
-    def actions(self):
+    def actions(self, state):
         """Return all available actions at this point in time."""
         if self.task:
-            return self.task.actions()
+            return self.task.actions(state)
         return []
 
     def action(self, key, state):
@@ -85,7 +86,10 @@ class Part:
             else:
                 raise
         except TypeError:
-            self.task = self.tasks.popleft()
+            if self.tasks:
+                self.task = self.tasks.popleft()
+            else:
+                raise StopIteration
 
 
 class Connections(Part):
@@ -115,15 +119,20 @@ class Question:
             "answer": self.answer if self.n_shown == 5 else None,
         }
 
-    def actions(self):
+    def actions(self, state):
         """Return all available actions at this point in time."""
         available = []
         if self.n_shown > 4:
             return available
-        available.append(
-            ("award_primary", "Give points to primary team")
-        )
-        if self.n_shown == 4:
+        if state.buzz in ("left", "right"):
+            # can only award if they buzzed
+            available.append(
+                ("award_primary", "Give points to primary team")
+            )
+            available.append(
+                ("award_bonus", "Give 1 point to other team")
+            )
+        if not available and self.n_shown == 4:  # other team didn't buzz, but we showed all
             available.append(
                 ("award_bonus", "Give 1 point to other team")
             )
@@ -131,7 +140,7 @@ class Question:
 
     def action(self, key, state):
         """Perform an action"""
-        if key not in [k for (k, _desc) in self.actions()]:
+        if key not in [k for (k, _desc) in self.actions(state)]:
             return None
         if key.startswith("award_"):
             _, __, team = state.buzz.rpartition("-")

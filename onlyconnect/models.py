@@ -15,7 +15,6 @@ class BuzzState(Enum):
 class User(BaseModel):
     name: Literal["left", "right", "admin"]
     descriptive_name: Optional[str]
-    score: int = 0
 
     @property
     def is_admin(self):

@@ -7,4 +7,12 @@
     <input name="points" placeholder="points"></input>
     <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-swap="none" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
     <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-swap="none" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
+    <button {{ authheader }} hx-trigger="click, keyup[key=='n']" hx-swap="none" hx-post="/next">[n]ext</button>
+    <div id="actions" hx-get="/ui/admin" hx-select="#actions" hx-trigger="every 2s" {{ authheader }} hx-swap="outerHTML">
+        <ul>
+            {% for (action, description) in actions %}
+            <li hx-swap="none" hx-post="/action/{{ action }}" {{ authheader }} hx-trigger="click, keyup[key=='{{ loop.index }}'] from:body">{{ loop.index }}: {{ description }}</li>
+            {% endfor %}
+        </ul>
+    </div>
 </html>

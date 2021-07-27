@@ -17,7 +17,7 @@ from .game import Game
 CODES = {}
 BUZZLOCK = Lock()
 STATE = State()
-GAME = Game()
+GAME = Game(STATE)
 
 app = FastAPI()
 
@@ -83,7 +83,7 @@ async def stage():
     return GAME.stage()
 
 
-@app.get("/next")
+@app.post("/next")
 async def state(user: User = Depends(auth.admin)):
     try:
         return next(GAME)
@@ -97,8 +97,8 @@ async def state(user: User = Depends(auth.admin)):
 
 
 @app.post("/action/{key}")
-async def state(user: User = Depends(auth.admin), key: str):
-    return GAME.action(key, STATE)
+async def state(key: str, user: User = Depends(auth.admin)):
+    return GAME.action(key)
 
 
 @app.post("/buzz")
@@ -134,8 +134,8 @@ async def ui_stage(request: Request):
         "request": request,
         "leftname": auth.USERS["left"].descriptive_name or "left",
         "rightname": auth.USERS["right"].descriptive_name or "right",
-        "leftscore": auth.USERS["left"].score,
-        "rightscore": auth.USERS["right"].score,
+        "leftscore": STATE.points["left"],
+        "rightscore": STATE.points["right"],
     }
 
     if GAME.part and isinstance(GAME.part, game.Connections):  # includes sequences
@@ -156,7 +156,7 @@ async def ui_stage(request: Request):
         )
 
 
-@app.post("/ui/buzzer")
+@app.get("/ui/buzzer")
 async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
     token = user.get_token(auth.TOKENS)
     return templates.TemplateResponse(
@@ -178,13 +178,14 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
     )
 
 
-@app.post("/ui/admin")
+@app.get("/ui/admin")
 async def ui_admin(request: Request, user: User = Depends(auth.admin)):
     token = user.get_token(auth.TOKENS)
     return templates.TemplateResponse(
         "admin.html",
         {
             "request": request,
+            "actions": GAME.actions(),
             "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
         },
     )
