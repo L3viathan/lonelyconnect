@@ -1,3 +1,4 @@
+from time import monotonic
 from collections import deque
 
 
@@ -5,14 +6,13 @@ class Game:
     def __init__(self, state):
         self.parts = deque()
         self.part = None
-        self.timer = None
         self.state = state
 
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
         print("game data:", game_data)
         for part_data in game_data["parts"]:
-            part = PART_TYPES[part_data["type"]]()
+            part = PART_TYPES[part_data["type"]](self)
             part.load(part_data)
             self.parts.append(part)
 
@@ -34,6 +34,10 @@ class Game:
             return self.part.action(key, self.state)
         return None
 
+    def buzz(self, who):
+        if self.part:
+            return self.part.buzz(who)
+
     def __iter__(self):
         return self
 
@@ -51,7 +55,8 @@ class Game:
 
 
 class Part:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.task = None
         self.tasks = deque()
 
@@ -74,6 +79,10 @@ class Part:
         if self.task:
             return self.task.action(key, state)
         return None
+
+    def buzz(self, who):
+        if self.task:
+            return self.task.buzz(who)
 
     def __iter__(self):
         return self
@@ -98,7 +107,7 @@ class Connections(Part):
     def load(self, part_data):
         """Given part data, load questions or other tasks (theoretically)."""
         for task_data in part_data["questions"]:
-            self.tasks.append(Question(task_data))
+            self.tasks.append(Question(task_data, self))
 
 
 class Sequences(Connections):
@@ -106,7 +115,8 @@ class Sequences(Connections):
 
 
 class Question:
-    def __init__(self, task_data):
+    def __init__(self, task_data, part):
+        self.part = part
         self.answer = task_data["answer"]
         self.steps = [Step(step_data) for step_data in task_data["steps"]]
         self.is_sequences = len(self.steps) == 3
@@ -114,11 +124,19 @@ class Question:
             self.steps.append(Step(None))  # question mark
         self.active_team = None
         self.n_shown = 0
+        self.timer = None
+
+    @property
+    def state(self):
+        return self.part.game.state
 
     def stage(self):
+        if self.timer and not self.timer.remaining and self.state.buzz != "inactive":
+            self.state.buzz = "inactive"
         return {
             "steps": [step.label for step in self.steps[: self.n_shown]],
             "answer": self.answer if self.n_shown == 5 else None,
+            "time_remaining": self.timer and self.timer.remaining_round,
         }
 
     def actions(self, state):
@@ -152,6 +170,9 @@ class Question:
             )
         return available
 
+    def buzz(self, who):
+        self.timer.freeze()
+
     def action(self, key, state):
         """Perform an action"""
         if key not in [k for (k, _desc) in self.actions(state)]:
@@ -161,7 +182,7 @@ class Question:
             self.active_team = team
             self.n_shown += 1
             state.buzz = f"active-{team}"
-            # self.timer = Timer(30)
+            self.timer = Timer(10)
         if key.startswith("award_"):
             team = self.active_team
             if not team:
@@ -205,6 +226,28 @@ class Step:
         else:
             self.label = step_data["label"]
             self.explanation = step_data.get("explanation")
+
+
+class Timer:
+    def __init__(self, seconds):
+        self.end = monotonic() + seconds
+        self._remaining = None
+
+    @property
+    def remaining(self):
+        if self._remaining:
+            return self._remaining
+        now = monotonic()
+        if now >= self.end:
+            return 0
+        return self.end - now
+
+    @property
+    def remaining_round(self):
+        return int(self.remaining)
+
+    def freeze(self):
+        self._remaining = self.remaining
 
 
 PART_TYPES = {

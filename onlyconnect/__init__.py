@@ -106,6 +106,7 @@ async def buzz(user: User = Depends(auth.player)):
     async with BUZZLOCK:
         if STATE.buzz in ("active", f"active-{user.name}"):
             STATE.buzz = user.name
+            GAME.buzz(user.name)
         else:
             raise HTTPException(
                 status_code=409,
@@ -173,6 +174,7 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
                 if STATE.buzz in ("active", f"active-{user.name}")
                 else "grey"
             ),
+            **GAME.stage(),
             "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
         },
     )
