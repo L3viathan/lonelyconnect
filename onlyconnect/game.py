@@ -1,5 +1,6 @@
 from collections import deque
 
+
 class Game:
     def __init__(self, state):
         self.parts = deque()
@@ -47,6 +48,7 @@ class Game:
                 raise
         except TypeError:
             self.part = self.parts.popleft()
+
 
 class Part:
     def __init__(self):
@@ -98,8 +100,10 @@ class Connections(Part):
         for task_data in part_data["questions"]:
             self.tasks.append(Question(task_data))
 
+
 class Sequences(Connections):
     pass
+
 
 class Question:
     def __init__(self, task_data):
@@ -108,14 +112,12 @@ class Question:
         self.is_sequences = len(self.steps) == 3
         if self.is_sequences:
             self.steps.append(Step(None))  # question mark
+        self.active_team = None
         self.n_shown = 0
 
     def stage(self):
         return {
-            "steps": [
-                step.label
-                for step in self.steps[:self.n_shown]
-            ],
+            "steps": [step.label for step in self.steps[: self.n_shown]],
             "answer": self.answer if self.n_shown == 5 else None,
         }
 
@@ -124,17 +126,29 @@ class Question:
         available = []
         if self.n_shown > 4:
             return available
+        if not self.n_shown:
+            available.extend(
+                [
+                    ("start_left", "Start question for left team"),
+                    ("start_right", "Start question for right team"),
+                ],
+            )
         if state.buzz in ("left", "right"):
             # can only award if they buzzed
-            available.append(
-                ("award_primary", "Give points to primary team")
+            available.extend(
+                [
+                    ("award_primary", "Give points to primary team"),
+                    ("award_bonus", "Give 1 point to other team"),
+                    ("no_points", "No points for either team"),
+                ],
             )
-            available.append(
-                ("award_bonus", "Give 1 point to other team")
-            )
-        if not available and self.n_shown == 4:  # other team didn't buzz, but we showed all
-            available.append(
-                ("award_bonus", "Give 1 point to other team")
+        if not available and self.n_shown == 4:
+            # other team didn't buzz, but we showed all
+            available.extend(
+                [
+                    ("award_bonus", "Give 1 point to other team"),
+                    ("no_points", "No points for either team"),
+                ],
             )
         return available
 
@@ -142,8 +156,14 @@ class Question:
         """Perform an action"""
         if key not in [k for (k, _desc) in self.actions(state)]:
             return None
+        if key.startswith("start_"):
+            _, __, team = key.partition("_")
+            self.active_team = team
+            self.n_shown += 1
+            state.buzz = f"active-{team}"
+            # self.timer = Timer(30)
         if key.startswith("award_"):
-            _, __, team = state.buzz.rpartition("-")
+            team = self.active_team
             if not team:
                 raise RuntimeError("unknown active team")
             if key == "award_primary":
@@ -153,12 +173,21 @@ class Question:
             else:
                 raise RuntimeError("unknown award_ key")
             self.n_shown = 5
+            state.buzz = "inactive"
+            self.active_team = None
+        if key == "no_points":
+            self.n_shown = 5
+            state.buzz = "inactive"
+            self.active_team = None
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        if self.n_shown < 2:
+        if not self.n_shown:
+            # activate only via an action (to mark team)
+            pass
+        elif self.n_shown == 1:
             self.n_shown += 1
         elif self.n_shown == 2 and self.is_sequences:
             self.n_shown += 2
@@ -166,6 +195,7 @@ class Question:
             self.n_shown += 1
         else:
             raise StopIteration("Out of steps")
+
 
 class Step:
     def __init__(self, step_data):
