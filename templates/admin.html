@@ -1,5 +1,9 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+    <form hx-encoding="multipart/form-data" hx-post="/load" {{ authheader }} hx-swap="none">
+        <input type="file" name="file">
+        <button type="submit">Load</button>
+    </form>
     <button hx-swap="none" id="buzz_active" hx-put="/buzz/active" {{ authheader }} hx-trigger="click, keyup[key=='a'] from:body">buzz: [a]ctive</button>
     <button hx-swap="none" id="buzz_inactive" hx-put="/buzz/inactive" {{ authheader }} hx-trigger="click, keyup[key=='x'] from:body">buzz: Ina[x]tive</button>
     <button hx-swap="none" id="buzz_active_left" hx-put="/buzz/active-left" {{ authheader }} hx-trigger="click, keyup[key=='l'] from:body">buzz: [l]eft only</button>

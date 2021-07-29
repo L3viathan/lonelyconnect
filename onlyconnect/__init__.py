@@ -5,7 +5,7 @@ from asyncio import Lock
 import markupsafe
 import yaml
 
-from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, File
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -64,14 +64,22 @@ async def startup():
         code = random_token(6)
         print("admin code:", code)
     CODES[code] = "admin"
-    with open("test.yml") as f:
-        GAME.load(yaml.load(f))
+    # with open("test.yml") as f:
+    #     GAME.load(yaml.load(f))
 
 @app.post("/pair/{username}")
 async def pair(username: str, user: User = Depends(auth.admin)):
     code = random_token(6)
     CODES[code] = username
     return code
+
+
+@app.post("/load")
+async def load(user: User = Depends(auth.admin), file: bytes = File(...)):
+    global GAME, STATE
+    STATE = State()
+    GAME = Game(STATE)
+    GAME.load(yaml.load(file))
 
 
 @app.get("/codes")
