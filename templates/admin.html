@@ -1,6 +1,5 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
-    <div hx-get="/codes" hx-trigger="click" {{ authheader }}>click to reveal codes</div>
     <button hx-swap="none" id="buzz_active" hx-put="/buzz/active" {{ authheader }} hx-trigger="click, keyup[key=='a'] from:body">buzz: [a]ctive</button>
     <button hx-swap="none" id="buzz_inactive" hx-put="/buzz/inactive" {{ authheader }} hx-trigger="click, keyup[key=='x'] from:body">buzz: Ina[x]tive</button>
     <button hx-swap="none" id="buzz_active_left" hx-put="/buzz/active-left" {{ authheader }} hx-trigger="click, keyup[key=='l'] from:body">buzz: [l]eft only</button>
@@ -9,11 +8,31 @@
     <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-swap="none" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
     <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-swap="none" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
     <button {{ authheader }} hx-trigger="click, keyup[key=='n']" hx-swap="none" hx-post="/next">[n]ext</button>
-    <div id="actions" hx-get="/ui/admin" hx-select="#actions" hx-trigger="every 2s" {{ authheader }} hx-swap="outerHTML">
-        <ul>
-            {% for (action, description) in actions %}
-            <li hx-swap="none" hx-post="/action/{{ action }}" {{ authheader }} hx-trigger="click, keyup[key=='{{ loop.index }}'] from:body">{{ loop.index }}: {{ description }}</li>
-            {% endfor %}
-        </ul>
+    <input name="teamname" placeholder="team name"></input>
+    <button {{ authheader }} hx-trigger="click" hx-swap="none" hx-post="/name/left" hx-include="[name='teamname']">change name of left team</button>
+    <button {{ authheader }} hx-trigger="click" hx-swap="none" hx-post="/name/right" hx-include="[name='teamname']">change name of right team</button>
+    <button {{ authheader }} hx-trigger="click" hx-post="/pair/left" hx-target="#leftcode">pair left</button><span id="leftcode"></span>
+    <button {{ authheader }} hx-trigger="click" hx-post="/pair/right" hx-target="#rightcode">pair right</button><span id="rightcode"></span>
+    <div id="main" hx-get="/ui/admin" hx-select="#main" hx-trigger="every 2s" {{ authheader }} hx-swap="outerHTML">
+        <div id="actions">
+            <ul>
+                {% for (action, description) in actions %}
+                <li hx-swap="none" hx-post="/action/{{ action }}" {{ authheader }} hx-trigger="click, keyup[key=='{{ loop.index }}'] from:body">{{ loop.index }}: {{ description }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if time_remaining %}
+        <div id="timer">
+            <div id="timer-inner" style="width: {{ (time_remaining * 100) / time_total }}%;"></div>
+        </div>
+        {% endif %}
+        <div id="steps">
+        {% for step in secrets.step_explanations %}
+            <button class="step">{{ step }}</button>
+        {% endfor %}
+        {% if secrets.explanation %}
+            <div id="answer">{{ secrets.explanation }}</div>
+        {% endif %}
+        </div>
     </div>
 </html>

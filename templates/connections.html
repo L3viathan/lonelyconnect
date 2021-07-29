@@ -1,7 +1,11 @@
 {% extends "stage.html" %}
 {% block main %}
-        <div id="answer">{{ answer or "" }}</div>
+        {% if answer %}
+        <div id="answer">{{ answer }}</div>
+        {% endif %}
+        <div id="steps">
         {% for step in steps %}
-            <button style="width: 25%;">{{ step }}</button>
+            <button class="step">{{ step }}</button>
         {% endfor %}
+        </div>
 {% endblock %}

@@ -38,4 +38,3 @@ class State(BaseModel):
     """
     points: dict = {"left": 0, "right": 0}
     buzz: BuzzState = "inactive"
-    stage: Literal["connections", "sequences", "wall", "missing vowels"] = "connections"

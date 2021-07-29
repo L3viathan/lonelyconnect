@@ -1,3 +1,4 @@
+import os
 import random
 from asyncio import Lock
 
@@ -7,6 +8,7 @@ import yaml
 from fastapi import FastAPI, Depends, HTTPException, Request, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 
 from starlette.responses import RedirectResponse
 
@@ -20,6 +22,7 @@ STATE = State()
 GAME = Game(STATE)
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -54,22 +57,25 @@ def random_token(length=6):
 @app.on_event("startup")
 async def startup():
     for username in ("admin", "left", "right"):
-        code = random_token(6)
-        print(f"CODE for {username}:", code)
-        CODES[code] = username
         auth.USERS[username] = User(name=username)
+    if "onlyconnect_admin_code" in os.environ:
+        code = os.environ["onlyconnect_admin_code"]
+    else:
+        code = random_token(6)
+        print("admin code:", code)
+    CODES[code] = "admin"
     with open("test.yml") as f:
         GAME.load(yaml.load(f))
+
+@app.post("/pair/{username}")
+async def pair(username: str, user: User = Depends(auth.admin)):
+    code = random_token(6)
+    CODES[code] = username
+    return code
 
 
 @app.get("/codes")
 async def codes(user: User = Depends(auth.admin)):
-    # if user.name != "admin":
-    #     raise HTTPException(
-    #         status_code=401,
-    #         detail="Only accessible to admin",
-    #         headers={"WWW-Authenticate": "Bearer"},
-    #     )
     return CODES
 
 
@@ -81,6 +87,11 @@ async def state():
 @app.get("/stage")
 async def stage():
     return GAME.stage()
+
+
+@app.get("/secrets")
+async def secrets(user: User = Depends(auth.admin)):
+    return GAME.secrets()
 
 
 @app.post("/next")
@@ -128,6 +139,12 @@ async def add_to_score(request: Request, username: str, user: User = Depends(aut
     STATE.points[username] += int(form_data["points"])
 
 
+@app.post("/name/{username}")
+async def add_to_score(request: Request, username: str, user: User = Depends(auth.admin)):
+    form_data = await request.form()
+    auth.USERS[username].descriptive_name = form_data["teamname"].upper()
+
+
 @app.get("/ui/stage")
 async def ui_stage(request: Request):
     stage = GAME.stage()
@@ -137,18 +154,13 @@ async def ui_stage(request: Request):
         "rightname": auth.USERS["right"].descriptive_name or "right",
         "leftscore": STATE.points["left"],
         "rightscore": STATE.points["right"],
+        **stage
     }
 
     if GAME.part and isinstance(GAME.part, game.Connections):  # includes sequences
         return templates.TemplateResponse(
             "connections.html",
-            {
-                **base_dict,
-                # the following two lines are ugly, but necessary at the moment
-                # "answer": None,
-                # "steps": [],
-                **stage,
-            },
+            base_dict,
         )
     else:
         return templates.TemplateResponse(
@@ -167,12 +179,12 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
             "disabled": ""
             if STATE.buzz in ("active", "left", "right")
             else "disabled",  # user.name) else "disabled",
-            "buzzer_color": (
-                "red"
+            "buzz_state": (
+                "buzzed"
                 if STATE.buzz == user.name
-                else "blue"
+                else "buzzable"
                 if STATE.buzz in ("active", f"active-{user.name}")
-                else "grey"
+                else "inactive"
             ),
             **GAME.stage(),
             "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
@@ -189,6 +201,8 @@ async def ui_admin(request: Request, user: User = Depends(auth.admin)):
             "request": request,
             "actions": GAME.actions(),
             "authheader": markupsafe.Markup(f""" hx-headers='{{"Authorization": "Bearer {token}"}}' """),
+            "secrets": GAME.secrets(),
+            **GAME.stage(),
         },
     )
 

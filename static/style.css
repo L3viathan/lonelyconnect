@@ -1,0 +1,82 @@
+* {
+    transition: all 1s ease;
+    font-family: sans-serif;
+}
+
+body {
+    height: 100%;
+    background: linear-gradient(180deg, rgba(158,158,158,1) 0%, rgba(93,93,93,1) 21%, rgba(0,0,0,1) 100%);
+}
+
+button.step {
+    width: calc(25% - 4px); /* border on both sides */
+    height: 130px;
+    background: radial-gradient(circle, rgba(23,148,190,1) 0%, rgba(9,70,121,1) 35%, rgba(0,92,111,1) 100%);
+    color: white;
+    font-weight: bold;
+    font-size: x-large;
+    border-radius: 10px;
+    border: 2px solid white;
+    vertical-align: middle;
+}
+
+.buzzer {
+}
+
+.buzzer.buzzable {
+    background: radial-gradient(circle, rgba(23,148,190,1) 0%, rgba(9,70,121,1) 35%, rgba(0,92,111,1) 100%);
+}
+
+.buzzer.buzzed {
+    background: radial-gradient(circle, rgba(23,148,190,1) 0%, rgba(26,151,255,1) 35%, rgba(0,92,111,1) 100%); 
+}
+
+.buzzer.inactive {
+    background: radial-gradient(circle, rgba(196,196,196,1) 0%, rgba(255,255,255,1) 35%, rgba(103,103,103,1) 100%);
+}
+
+#timer-inner {
+    width: 80%;
+    height: 100%;
+    background: radial-gradient(circle, rgb(7, 86, 113) 0%, rgb(9, 70, 121) 35%, rgb(0, 92, 111) 100%);
+    border-radius: 5px;
+}
+
+#timer {
+    height: 20px;
+    background: white;
+    border-radius: 5px;
+    margin: 10px;
+}
+
+.teamname {
+    background: radial-gradient(circle, rgb(7, 86, 113) 0%, rgb(9, 70, 121) 35%, rgb(0, 92, 111) 100%);
+    padding: 9px 5px 5px 5px;
+    border-radius: 5px;
+}
+
+.points {
+    background: white;
+    color: black;
+    border-radius: 5px;
+    padding: 2px 4px 0 3px;
+}
+
+#scoreboard {
+    height: 50px;
+    font-size: xx-large;
+    text-align: center;
+    color: white;
+    border-radius: 5px;
+}
+
+#answer {
+    color: white;
+    background: radial-gradient(circle, rgb(23, 148, 190) 0%, rgb(9, 70, 121) 35%, rgb(0, 92, 111) 100%);
+    padding: 5px;
+    font-size: x-large;
+    text-align: center;
+    border: 2px solid white;
+    border-radius: 5px;
+    margin: 10px;
+}

@@ -1,8 +1,11 @@
 <html>
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
+    <link rel="stylesheet" href="/static/style.css">
+    <body>
     <div hx-get="/ui/buzzer" hx-trigger="every 1s" {{ authheader }} hx-swap="outerHTML" id="main">
-        <div id="buzzerbutton" hx-post="/buzz" {{ authheader }} hx-trigger="click" style="background-color: {{ buzzer_color }}; width:100%; height:100%;" disabled="{{ disabled }}">
+        <div id="buzzerbutton" hx-post="/buzz" {{ authheader }} hx-trigger="click" class="buzzer {{ buzz_state }}" style="width:100%; height:100%;" disabled="{{ disabled }}">
             {{ time_remaining }}
         </div>
     </div>
+    </body>
 </html>

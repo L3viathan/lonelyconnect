@@ -10,11 +10,16 @@ class Game:
 
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
-        print("game data:", game_data)
         for part_data in game_data["parts"]:
             part = PART_TYPES[part_data["type"]](self)
             part.load(part_data)
             self.parts.append(part)
+
+    def secrets(self):
+        """Return data for the current stage."""
+        if self.part:
+            return self.part.secrets()
+        return {}
 
     def stage(self):
         """Return data for the current stage."""
@@ -62,6 +67,11 @@ class Part:
 
     def load(self, part_data):
         raise NotImplementedError
+
+    def secrets(self):
+        if self.task:
+            return self.task.secrets()
+        return {}
 
     def stage(self):
         if self.task:
@@ -118,6 +128,7 @@ class Question:
     def __init__(self, task_data, part):
         self.part = part
         self.answer = task_data["answer"]
+        self.explanation = task_data["explanation"]
         self.steps = [Step(step_data) for step_data in task_data["steps"]]
         self.is_sequences = len(self.steps) == 3
         if self.is_sequences:
@@ -130,6 +141,12 @@ class Question:
     def state(self):
         return self.part.game.state
 
+    def secrets(self):
+        return {
+            "step_explanations": [step.explanation for step in self.steps[: self.n_shown]],
+            "explanation": self.explanation,
+        }
+
     def stage(self):
         if self.timer and not self.timer.remaining and self.state.buzz != "inactive":
             self.state.buzz = "inactive"
@@ -137,6 +154,7 @@ class Question:
             "steps": [step.label for step in self.steps[: self.n_shown]],
             "answer": self.answer if self.n_shown == 5 else None,
             "time_remaining": self.timer and self.timer.remaining_round,
+            "time_total": self.timer and self.timer.duration,
         }
 
     def actions(self, state):
@@ -160,7 +178,7 @@ class Question:
                     ("no_points", "No points for either team"),
                 ],
             )
-        if not available and self.n_shown == 4:
+        if not available and (self.n_shown == 4 or self.timer and not self.timer.remaining):
             # other team didn't buzz, but we showed all
             available.extend(
                 [
@@ -171,7 +189,9 @@ class Question:
         return available
 
     def buzz(self, who):
-        self.timer.freeze()
+        if self.timer:
+            self.timer.freeze()
+        self.active_team = who
 
     def action(self, key, state):
         """Perform an action"""
@@ -182,7 +202,7 @@ class Question:
             self.active_team = team
             self.n_shown += 1
             state.buzz = f"active-{team}"
-            self.timer = Timer(10)
+            self.timer = Timer(30)
         if key.startswith("award_"):
             team = self.active_team
             if not team:
@@ -214,6 +234,7 @@ class Question:
             self.n_shown += 2
         elif self.n_shown < 5:
             self.n_shown += 1
+            self.timer = None  # the latest here
         else:
             raise StopIteration("Out of steps")
 
@@ -231,6 +252,7 @@ class Step:
 class Timer:
     def __init__(self, seconds):
         self.end = monotonic() + seconds
+        self.duration = seconds
         self._remaining = None
 
     @property
