@@ -1,4 +1,5 @@
 from time import monotonic
+from random import shuffle
 from collections import deque
 
 
@@ -116,8 +117,10 @@ class Part:
 class Connections(Part):
     def load(self, part_data):
         """Given part data, load questions or other tasks (theoretically)."""
-        for task_data in part_data["questions"]:
-            self.tasks.append(Question(task_data, self))
+        questions = part_data["questions"]
+        shuffle(questions)
+        for question_data in questions:
+            self.tasks.append(Question(question_data, self))
 
 
 class Sequences(Connections):
@@ -178,7 +181,7 @@ class Question:
                     ("no_points", "No points for either team"),
                 ],
             )
-        if not available and (self.n_shown == 4 or self.timer and not self.timer.remaining):
+        if not available and self.n_shown == 4 and self.timer and not self.timer.remaining:
             # other team didn't buzz, but we showed all
             available.extend(
                 [
@@ -234,7 +237,8 @@ class Question:
             self.n_shown += 2
         elif self.n_shown < 5:
             self.n_shown += 1
-            self.timer = None  # the latest here
+            if self.n_shown == 5:
+                self.timer = None  # the latest here
         else:
             raise StopIteration("Out of steps")
 
