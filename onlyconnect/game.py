@@ -1,5 +1,5 @@
+import random
 from time import monotonic
-from random import shuffle
 from collections import deque
 
 
@@ -114,11 +114,22 @@ class Part:
                 raise StopIteration
 
 
+class MissingVowels(Part):
+    def __init__(self, game):
+        super().__init__(game)
+        self.timer = None
+
+    def load(self, part_data):
+        groups = part_data["groups"]
+        random.shuffle(groups)
+        for group_data in groups:
+            self.tasks.append(MissingVowelGroup(group_data, self))
+
 class Connections(Part):
     def load(self, part_data):
         """Given part data, load questions or other tasks (theoretically)."""
         questions = part_data["questions"]
-        shuffle(questions)
+        random.shuffle(questions)
         for question_data in questions:
             self.tasks.append(Question(question_data, self))
 
@@ -127,14 +138,86 @@ class Sequences(Part):
     def load(self, part_data):
         """Given part data, load questions or other tasks (theoretically)."""
         questions = part_data["questions"]
-        shuffle(questions)
+        random.shuffle(questions)
         for question_data in questions:
             self.tasks.append(Question(question_data, self, is_sequences=True))
 
 
-class Question:
-    def __init__(self, task_data, part, is_sequences=False):
+class Task:
+    def __init__(self, task_data, part):
         self.part = part
+
+    @property
+    def state(self):
+        return self.part.game.state
+
+    def __iter__(self):
+        return self
+
+
+class MissingVowelGroup(Task):
+    def __init__(self, task_data, part):
+        self.part = part
+        self.name = task_data["name"]
+        self.phrases = deque(Phrase(phrase_data) for phrase_data in task_data["phrases"])
+        self.phrase = None
+        self.clear = False
+
+    @property
+    def timer(self):
+        return self.part.timer
+
+    def secrets(self):
+        if self.phrase:
+            return {
+                "answer": self.phrase.answer,
+            }
+        return {}
+
+    def stage(self):
+        stage_data = {
+            "time_remaining": self.timer and self.timer.remaining_round,
+            "time_total": self.timer and self.timer.duration,
+            "name": self.name,
+        }
+        if self.phrase:
+            stage_data["phrase"] = self.phrase.answer if self.clear else self.phrase.obfuscated
+        return stage_data
+
+    def actions(self, state):
+        if self.state.buzz in ("left", "right") and not self.clear:
+            return [
+                ("award_primary", "Give a point to the buzzing team"),
+                ("punish_primary", "Take a point from the buzzing team"),
+                ("award_secondary", "Give a point to the other team"),
+                ("punish_secondary", "Take a point from the other team"),
+            ]
+        return []
+
+    def action(self, key, state):
+        if key not in [k for (k, _desc) in self.actions(state)]:
+            return None
+        kind, _, team_id = key.partition("_")
+        if team_id == "primary":
+            team = self.state.buzz
+        else:
+            team = "right" if self.state.buzz == "left" else "left"
+        state.points[team] += 1 if kind == "award" else -1
+
+    def __next__(self):
+        if self.phrases and (not self.phrase or self.clear):
+            self.phrase = self.phrases.popleft()
+            self.clear = False
+        elif not self.clear:
+            self.clear = True
+        else:
+            raise StopIteration("Out of steps")
+
+
+
+class Question(Task):
+    def __init__(self, task_data, part, is_sequences=False):
+        super().__init__(task_data, part)
         self.answer = task_data["answer"]
         self.explanation = task_data["explanation"]
         self.steps = [Step(step_data) for step_data in task_data["steps"]]
@@ -142,10 +225,6 @@ class Question:
         self.active_team = None
         self.n_shown = 0
         self.timer = None
-
-    @property
-    def state(self):
-        return self.part.game.state
 
     def secrets(self):
         return {
@@ -230,9 +309,6 @@ class Question:
             state.buzz = "inactive"
             self.active_team = None
 
-    def __iter__(self):
-        return self
-
     def __next__(self):
         if not self.n_shown:
             # activate only via an action (to mark team)
@@ -249,14 +325,27 @@ class Question:
             raise StopIteration("Out of steps")
 
 
+def obfuscate(string):
+    chars = [char for char in string.upper() if char not in "AEIOU"]
+    return "".join(char if not i or random.random() > 0.2 else f" {char}" for i, char in enumerate(chars))
+
+
+class Phrase:
+    def __init__(self, phrase_data):
+        if isinstance(phrase_data, str):
+            # automatically obfuscate
+            self.answer = phrase_data.upper()
+            self.obfuscated = obfuscate(phrase_data)
+        else:
+            self.answer = phrase_data["answer"].upper()
+            self.obfuscated = phrase_data["obfuscated"].upper()
+        print("Initialized phrase", self.answer, "as", self.obfuscated)
+
+
 class Step:
     def __init__(self, step_data):
-        if step_data is None:
-            self.label = "?"
-            self.explanation = None
-        else:
-            self.label = step_data["label"]
-            self.explanation = step_data.get("explanation")
+        self.label = step_data["label"]
+        self.explanation = step_data.get("explanation")
 
 
 class Timer:
@@ -285,4 +374,5 @@ class Timer:
 PART_TYPES = {
     "connections": Connections,
     "sequences": Sequences,
+    "missing vowels": MissingVowels,
 }

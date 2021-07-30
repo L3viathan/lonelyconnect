@@ -170,6 +170,11 @@ async def ui_stage(request: Request):
             "connections.html",
             base_dict,
         )
+    elif GAME.part and isinstance(GAME.part, game.MissingVowels):
+        return templates.TemplateResponse(
+            "missing_vowels.html",
+            base_dict,
+        )
     else:
         return templates.TemplateResponse(
             "stage.html",

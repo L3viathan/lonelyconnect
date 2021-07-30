@@ -19,6 +19,9 @@ button.step {
     border: 2px solid white;
     vertical-align: middle;
 }
+button.step.wide {
+    width: calc(100% - 4px);
+}
 
 .buzzer {
 }
