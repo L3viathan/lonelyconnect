@@ -5,7 +5,7 @@
         {% endif %}
         <div id="steps">
         {% for step in steps %}
-            <button class="step">{{ step }}</button>
+            <button class="step">{{ step | safe }}</button>
         {% endfor %}
         </div>
 {% endblock %}

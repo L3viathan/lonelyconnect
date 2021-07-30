@@ -123,19 +123,22 @@ class Connections(Part):
             self.tasks.append(Question(question_data, self))
 
 
-class Sequences(Connections):
-    pass
+class Sequences(Part):
+    def load(self, part_data):
+        """Given part data, load questions or other tasks (theoretically)."""
+        questions = part_data["questions"]
+        shuffle(questions)
+        for question_data in questions:
+            self.tasks.append(Question(question_data, self, is_sequences=True))
 
 
 class Question:
-    def __init__(self, task_data, part):
+    def __init__(self, task_data, part, is_sequences=False):
         self.part = part
         self.answer = task_data["answer"]
         self.explanation = task_data["explanation"]
         self.steps = [Step(step_data) for step_data in task_data["steps"]]
-        self.is_sequences = len(self.steps) == 3
-        if self.is_sequences:
-            self.steps.append(Step(None))  # question mark
+        self.is_sequences = is_sequences
         self.active_team = None
         self.n_shown = 0
         self.timer = None
@@ -153,8 +156,11 @@ class Question:
     def stage(self):
         if self.timer and not self.timer.remaining and self.state.buzz != "inactive":
             self.state.buzz = "inactive"
+        steps = [step.label for step in self.steps[: self.n_shown]]
+        if self.is_sequences and self.n_shown == 4:
+            steps[-1] = "<span class='questionmark'>?</span>"
         return {
-            "steps": [step.label for step in self.steps[: self.n_shown]],
+            "steps": steps,
             "answer": self.answer if self.n_shown == 5 else None,
             "time_remaining": self.timer and self.timer.remaining_round,
             "time_total": self.timer and self.timer.duration,

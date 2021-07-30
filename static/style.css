@@ -80,3 +80,7 @@ button.step {
     border-radius: 5px;
     margin: 10px;
 }
+
+.questionmark {
+    font-size: 300%;
+}
