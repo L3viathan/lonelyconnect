@@ -1,5 +1,6 @@
 import os
 import random
+import pickle
 from asyncio import Lock
 
 import markupsafe
@@ -20,6 +21,7 @@ CODES = {}
 BUZZLOCK = Lock()
 STATE = State()
 GAME = Game(STATE)
+CONTROLLED_SHUTDOWN = False
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -56,16 +58,25 @@ def random_token(length=6):
 
 @app.on_event("startup")
 async def startup():
-    for username in ("admin", "left", "right"):
-        auth.USERS[username] = User(name=username)
     if "onlyconnect_admin_code" in os.environ:
         code = os.environ["onlyconnect_admin_code"]
     else:
         code = random_token(6)
         print("admin code:", code)
     CODES[code] = "admin"
-    # with open("test.yml") as f:
-    #     GAME.load(yaml.load(f))
+    try:
+        with open("swap.bin", "rb") as f:
+            global STATE, GAME
+            STATE, GAME = pickle.load(f)
+    except FileNotFoundError:
+        pass
+
+@app.on_event("shutdown")
+async def shutdown():
+    if CONTROLLED_SHUTDOWN:
+        return
+    with open("swap.bin", "wb") as f:
+        pickle.dump((STATE, GAME), f)
 
 @app.post("/pair/{username}")
 async def pair(username: str, user: User = Depends(auth.admin)):
