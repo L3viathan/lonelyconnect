@@ -1,4 +1,5 @@
 import os
+import sys
 import random
 import pickle
 from asyncio import Lock
@@ -111,6 +112,13 @@ async def stage():
 @app.get("/secrets")
 async def secrets(user: User = Depends(auth.admin)):
     return GAME.secrets()
+
+
+@app.post("/shutdown")
+async def secrets(user: User = Depends(auth.admin)):
+    global CONTROLLED_SHUTDOWN
+    CONTROLLED_SHUTDOWN = True
+    sys.exit(0)
 
 
 @app.post("/next")
