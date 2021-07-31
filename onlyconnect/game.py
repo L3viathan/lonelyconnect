@@ -125,6 +125,14 @@ class MissingVowels(Part):
         for group_data in groups:
             self.tasks.append(MissingVowelGroup(group_data, self))
 
+    def __next__(self):
+        if not self.timer:
+            self.timer = Timer(2 * 60)
+        if not self.timer.remaining and self.part and not self.task.clear:
+            raise StopIteration
+        super().__next__()
+
+
 class Connections(Part):
     def load(self, part_data):
         """Given part data, load questions or other tasks (theoretically)."""
@@ -159,7 +167,9 @@ class MissingVowelGroup(Task):
     def __init__(self, task_data, part):
         self.part = part
         self.name = task_data["name"]
-        self.phrases = deque(Phrase(phrase_data) for phrase_data in task_data["phrases"])
+        self.phrases = deque(
+            Phrase(phrase_data) for phrase_data in task_data["phrases"]
+        )
         self.phrase = None
         self.clear = False
 
@@ -181,7 +191,9 @@ class MissingVowelGroup(Task):
             "name": self.name,
         }
         if self.phrase:
-            stage_data["phrase"] = self.phrase.answer if self.clear else self.phrase.obfuscated
+            stage_data["phrase"] = (
+                self.phrase.answer if self.clear else self.phrase.obfuscated
+            )
         return stage_data
 
     def actions(self, state):
@@ -214,7 +226,6 @@ class MissingVowelGroup(Task):
             raise StopIteration("Out of steps")
 
 
-
 class Question(Task):
     def __init__(self, task_data, part, is_sequences=False):
         super().__init__(task_data, part)
@@ -228,7 +239,9 @@ class Question(Task):
 
     def secrets(self):
         return {
-            "step_explanations": [step.explanation for step in self.steps[: self.n_shown]],
+            "step_explanations": [
+                step.explanation for step in self.steps[: self.n_shown]
+            ],
             "explanation": self.explanation,
         }
 
@@ -266,7 +279,12 @@ class Question(Task):
                     ("no_points", "No points for either team"),
                 ],
             )
-        if not available and self.n_shown == 4 and self.timer and not self.timer.remaining:
+        if (
+            not available
+            and self.n_shown == 4
+            and self.timer
+            and not self.timer.remaining
+        ):
             # other team didn't buzz, but we showed all
             available.extend(
                 [
@@ -326,8 +344,11 @@ class Question(Task):
 
 
 def obfuscate(string):
-    chars = [char for char in string.upper() if char not in "AEIOU"]
-    return "".join(char if not i or random.random() > 0.2 else f" {char}" for i, char in enumerate(chars))
+    chars = [char for char in string.upper() if char not in "AEIOU "]
+    return "".join(
+        char if not i or random.random() > 0.2 else f" {char}"
+        for i, char in enumerate(chars)
+    )
 
 
 class Phrase:
