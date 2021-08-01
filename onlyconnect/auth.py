@@ -6,9 +6,9 @@ from .models import User
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")  # camel case because OpenAPI
 TOKENS = {}
 USERS = {
-    User(name="admin"),
-    User(name="left"),
-    User(name="right"),
+    "admin": User(name="admin"),
+    "left": User(name="left"),
+    "right": User(name="right"),
 }
 
 

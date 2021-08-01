@@ -345,7 +345,7 @@ class Question(Task):
 
 
 def obfuscate(string):
-    chars = [char for char in string.upper() if char not in "AEIOU "]
+    chars = [char for char in string.upper() if char not in "AEIOUÄÖÜ "]
     return "".join(
         char if not i or random.random() > 0.2 else f" {char}"
         for i, char in enumerate(chars)
