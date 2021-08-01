@@ -1,0 +1,65 @@
+parts:
+  - type: connections
+    questions:
+    - answer: Square numbers
+      explanation: This would show extra info about the answer
+      steps:
+      - explanation: 4 squared
+        label: 16
+      - explanation: 5 squared
+        label: 25
+      - explanation: 2 squared
+        label: 4
+      - explanation: 9 squared
+        label: 81
+    - answer: Countries and the number of their neighbors
+      explanation: These also all happen to be landlocked
+      steps:
+      - explanation: France, Italy, Austria, Liechtenstein, Germany
+        label: "Switzerland: 5"
+      - explanation: Germany, France, Belgium
+        label: "Luxembourg: 3"
+      - explanation: Romania, Ukraine
+        label: "Moldova: 2"
+      - explanation: South Africa
+        label: "Lesotho: 1"
+  - type: sequences
+    questions:
+    - answer: British monarchs leading up to the current one
+      explanation: Only 12 such monarchs in total (before they were just English/Scottish). Starting with Anne.
+      steps:
+      - explanation: 1910-1936
+        label: "5: George"
+      - explanation: 1936-1936 (January 20th until December 11th)
+        label: "8: Edward"
+      - explanation: 1936-1952
+        label: "6: George"
+      - explanation: Since 1952
+        label: "2: Elizabeth"
+    - answer: First words in Bona Nox cues
+      explanation: 
+      steps:
+      - explanation: nox, bist a rechter Ochs, bona
+        label: Bona
+      - explanation: liebe Lotte, bonne nuit, pfui pfui good night, good
+        label: notte
+      - explanation: heut müss mer noch weit gute Nacht gute Nacht, scheiß ins Bett das kracht, gute Nacht
+        label: night
+      - explanation: fei g'sund und reck den Arsch zum Mund
+        label: schlaf
+  - type: missing vowels
+    groups:
+    - name: Grimms' Fairy Tales
+      phrases:
+      - Rapunzel
+      - Der Froschkönig oder der eiserne Heinrich
+      - Der Wolf und die sieben jungen Geißlein
+      - Aschenputtel
+    - name: Harry Potter spells
+      phrases:
+      - Wingardium Leviosa
+      - Tarantallegra
+      - Avada Kedavra
+      - Accio
+      - Aguamenti
+      - Amato Animo Animato Animagus
