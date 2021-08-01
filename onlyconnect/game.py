@@ -180,7 +180,7 @@ class MissingVowelGroup(Task):
     def secrets(self):
         if self.phrase:
             return {
-                "answer": self.phrase.answer,
+                "explanation": self.phrase.answer,
             }
         return {}
 
@@ -220,6 +220,7 @@ class MissingVowelGroup(Task):
         if self.phrases and (not self.phrase or self.clear):
             self.phrase = self.phrases.popleft()
             self.clear = False
+            self.state.buzz = "active"
         elif not self.clear:
             self.clear = True
         else:
