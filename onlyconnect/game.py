@@ -2,6 +2,8 @@ import random
 from time import monotonic
 from collections import deque
 
+from .models import State
+
 
 class Game:
     def __init__(self, state):
@@ -398,3 +400,6 @@ PART_TYPES = {
     "sequences": Sequences,
     "missing vowels": MissingVowels,
 }
+
+STATE = State()
+GAME = Game(STATE)

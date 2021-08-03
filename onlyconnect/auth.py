@@ -10,6 +10,7 @@ USERS = {
     "left": User(name="left"),
     "right": User(name="right"),
 }
+CODES = {}
 
 
 def logged_in(token: str = Depends(oauth2_scheme)):
