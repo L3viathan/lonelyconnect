@@ -3,17 +3,19 @@
     <script src="https://unpkg.com/htmx.org@1.5.0"></script>
     <link rel="stylesheet" href="/static/style.css">
     <div id="main" hx-get="/ui/stage" hx-trigger="every 1s" hx-swap="outerHTML">
-        <div id="scoreboard">
+        <div id="scoreboard"{% if bigscores %} class="big"{% endif %}>
             <span class="teamname"><span class="points">{{ leftscore }}</span> {{ leftname }}</span>
             <span class="teamname">{{ rightname }} <span class="points">{{ rightscore }}</span></span>
         </div>
-        {% if time_remaining %}
-        <div id="timer">
-            <div id="timer-inner" style="width: {{ (time_remaining * 100) / time_total }}%;"></div>
-        </div>
+        {% if not bigscores %}
+            {% if time_remaining %}
+            <div id="timer">
+                <div id="timer-inner" style="width: {{ (time_remaining * 100) / time_total }}%;"></div>
+            </div>
+            {% endif %}
+            <br>
+            {% block main %}
+            {% endblock %}
         {% endif %}
-        <br>
-        {% block main %}
-        {% endblock %}
     </div>
 </html>

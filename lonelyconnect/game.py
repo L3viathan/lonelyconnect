@@ -28,7 +28,7 @@ class Game:
         """Return data for the current stage."""
         if self.part:
             return self.part.stage()
-        return {}
+        return {"bigscores": True}
 
     def actions(self):
         """Return all available actions at this point in time."""
@@ -52,6 +52,8 @@ class Game:
                 self.part = self.parts.popleft()
         elif key == "next" and self.parts:
             self.part = self.parts.popleft()
+        else:
+            raise StopIteration  # FIXME
 
     def buzz(self, who):
         if self.part:
@@ -75,15 +77,13 @@ class Part:
     def stage(self):
         if self.task:
             return self.task.stage()
-        return {}
+        return {"bigscores": True}
 
     def actions(self, state):
         """Return all available actions at this point in time."""
         if self.task:
             return self.task.actions(state)
-        elif self.tasks:
-            return [("next", "Load the next task")]
-        return []
+        return [("next", "Load the next task")]
 
     def action(self, key, state):
         """Perform an action"""
@@ -95,7 +95,10 @@ class Part:
                     self.task = self.tasks.popleft()
                 else:
                     self.task = None
-        return None
+        elif self.tasks:
+            self.task = self.tasks.popleft()
+        else:
+            raise StopIteration  # out of tasks
 
     def buzz(self, who):
         if self.task:
@@ -254,7 +257,7 @@ class Question(Task):
         """Return all available actions at this point in time."""
         available = []
         if self.n_shown > 4:
-            return available
+            return [("next", "Go on to next question")]
         if not self.n_shown:
             available.extend(
                 [
@@ -350,7 +353,6 @@ class Phrase:
         else:
             self.answer = phrase_data["answer"].upper()
             self.obfuscated = phrase_data["obfuscated"].upper()
-        print("Initialized phrase", self.answer, "as", self.obfuscated)
 
 
 class Step:

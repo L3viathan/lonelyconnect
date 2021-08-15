@@ -73,6 +73,10 @@ button.step.wide {
     border-radius: 5px;
 }
 
+#scoreboard.big {
+    font-size: 15vw;
+}
+
 #answer {
     color: white;
     background: radial-gradient(circle, rgb(23, 148, 190) 0%, rgb(9, 70, 121) 35%, rgb(0, 92, 111) 100%);
