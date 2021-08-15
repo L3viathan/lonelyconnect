@@ -56,8 +56,8 @@ def random_token(length=6):
 
 @app.on_event("startup")
 async def startup():
-    if "onlyconnect_admin_code" in os.environ:
-        code = os.environ["onlyconnect_admin_code"]
+    if "lonelyconnect_admin_code" in os.environ:
+        code = os.environ["lonelyconnect_admin_code"]
     else:
         code = random_token(6)
         print("admin code:", code)

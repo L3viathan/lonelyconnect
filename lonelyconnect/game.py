@@ -140,7 +140,7 @@ class Connections(Part):
         """Given part data, load questions or other tasks (theoretically)."""
         questions = part_data["questions"]
         random.shuffle(questions)
-        for question_data in questions:
+        for _, question_data in zip(range(6), questions):
             self.tasks.append(Question(question_data, self))
 
 
@@ -149,7 +149,7 @@ class Sequences(Part):
         """Given part data, load questions or other tasks (theoretically)."""
         questions = part_data["questions"]
         random.shuffle(questions)
-        for question_data in questions:
+        for _, question_data in zip(range(6), questions):
             self.tasks.append(Question(question_data, self, is_sequences=True))
 
 
