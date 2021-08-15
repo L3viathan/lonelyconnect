@@ -34,32 +34,28 @@ class Game:
         """Return all available actions at this point in time."""
         if self.part:
             return self.part.actions(self.state)
+        elif self.parts:
+            return [("next", "Load the next part")]
         return []
 
     def action(self, key):
         """Perform an action"""
         if self.part:
-            return self.part.action(key, self.state)
-        return None
+            try:
+                return self.part.action(key, self.state)
+            except StopIteration:
+                if self.parts:
+                    self.part = self.parts.popleft()
+                else:
+                    self.part = None
+            except TypeError: #???
+                self.part = self.parts.popleft()
+        elif key == "next" and self.parts:
+            self.part = self.parts.popleft()
 
     def buzz(self, who):
         if self.part:
             return self.part.buzz(who)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        """Advance one step. E.g.: show one more hint, or go to next question, etc."""
-        try:
-            return next(self.part)
-        except StopIteration:
-            if self.parts:
-                self.part = self.parts.popleft()
-            else:
-                raise
-        except TypeError:
-            self.part = self.parts.popleft()
 
 
 class Part:
@@ -85,36 +81,25 @@ class Part:
         """Return all available actions at this point in time."""
         if self.task:
             return self.task.actions(state)
+        elif self.tasks:
+            return [("next", "Load the next task")]
         return []
 
     def action(self, key, state):
         """Perform an action"""
         if self.task:
-            return self.task.action(key, state)
+            try:
+                return self.task.action(key, state)
+            except StopIteration:
+                if self.tasks:
+                    self.task = self.tasks.popleft()
+                else:
+                    self.task = None
         return None
 
     def buzz(self, who):
         if self.task:
             return self.task.buzz(who)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        try:
-            return next(self.task)
-        except StopIteration:
-            self.task = None
-            if self.tasks:
-                self.task = self.tasks.popleft()
-            else:
-                raise
-        except TypeError:
-            if self.tasks:
-                self.task = self.tasks.popleft()
-            else:
-                raise StopIteration
-
 
 class MissingVowels(Part):
     def __init__(self, game):
@@ -127,12 +112,13 @@ class MissingVowels(Part):
         for group_data in groups:
             self.tasks.append(MissingVowelGroup(group_data, self))
 
-    def __next__(self):
-        if not self.timer:
-            self.timer = Timer(2 * 60)
-        if not self.timer.remaining and self.part and not self.task.clear:
-            raise StopIteration
-        super().__next__()
+    def action(self, key, state):
+        if key == "next":
+            if not self.timer:
+                self.timer = Timer(2 * 60)
+            if not self.timer.remaining and self.part and not self.task.clear:
+                raise StopIteration
+        return super().action(key, state)
 
 
 class Connections(Part):
@@ -160,9 +146,6 @@ class Task:
     @property
     def state(self):
         return self.part.game.state
-
-    def __iter__(self):
-        return self
 
 
 class MissingVowelGroup(Task):
@@ -206,28 +189,34 @@ class MissingVowelGroup(Task):
                 ("award_secondary", "Give a point to the other team"),
                 ("punish_secondary", "Take a point from the other team"),
             ]
-        return []
+        elif self.clear:
+            return [
+                ("next", "Go to the next clue")
+            ]
+        else:
+            return [
+                ("next", "Resolve clue")
+            ]
 
     def action(self, key, state):
         if key not in [k for (k, _desc) in self.actions(state)]:
             return None
-        kind, _, team_id = key.partition("_")
-        if team_id == "primary":
-            team = self.state.buzz
+        if key == "next":
+            if self.phrases and (not self.phrase or self.clear):
+                self.phrase = self.phrases.popleft()
+                self.clear = False
+                self.state.buzz = "active"
+            elif not self.clear:
+                self.clear = True
+            else:
+                raise StopIteration("Out of steps")
         else:
-            team = "right" if self.state.buzz == "left" else "left"
-        state.points[team] += 1 if kind == "award" else -1
-
-    def __next__(self):
-        if self.phrases and (not self.phrase or self.clear):
-            self.phrase = self.phrases.popleft()
-            self.clear = False
-            self.state.buzz = "active"
-        elif not self.clear:
-            self.clear = True
-        else:
-            raise StopIteration("Out of steps")
-
+            kind, _, team_id = key.partition("_")
+            if team_id == "primary":
+                team = self.state.buzz
+            else:
+                team = "right" if self.state.buzz == "left" else "left"
+            state.points[team] += 1 if kind == "award" else -1
 
 class Question(Task):
     def __init__(self, task_data, part, is_sequences=False):
@@ -273,6 +262,8 @@ class Question(Task):
                     ("start_right", "Start question for right team"),
                 ],
             )
+        else:
+            available.extend([("next", "Show the next clue")])
         if state.buzz in ("left", "right"):
             # can only award if they buzzed
             available.extend(
@@ -312,7 +303,7 @@ class Question(Task):
             self.n_shown += 1
             state.buzz = f"active-{team}"
             self.timer = Timer(30)
-        if key.startswith("award_"):
+        elif key.startswith("award_"):
             team = self.active_team
             if not team:
                 raise RuntimeError("unknown active team")
@@ -325,25 +316,21 @@ class Question(Task):
             self.n_shown = 5
             state.buzz = "inactive"
             self.active_team = None
-        if key == "no_points":
+        elif key == "no_points":
             self.n_shown = 5
             state.buzz = "inactive"
             self.active_team = None
-
-    def __next__(self):
-        if not self.n_shown:
-            # activate only via an action (to mark team)
-            pass
-        elif self.n_shown == 1:
-            self.n_shown += 1
-        elif self.n_shown == 2 and self.is_sequences:
-            self.n_shown += 2
-        elif self.n_shown < 5:
-            self.n_shown += 1
-            if self.n_shown == 5:
-                self.timer = None  # the latest here
-        else:
-            raise StopIteration("Out of steps")
+        elif key == "next":
+            if self.n_shown == 1:
+                self.n_shown += 1
+            elif self.n_shown == 2 and self.is_sequences:
+                self.n_shown += 2
+            elif self.n_shown < 5:
+                self.n_shown += 1
+                if self.n_shown == 5:
+                    self.timer = None  # the latest here
+            else:
+                raise StopIteration("Out of steps")
 
 
 def obfuscate(string):

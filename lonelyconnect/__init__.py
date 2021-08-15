@@ -118,14 +118,6 @@ async def secrets(user: User = Depends(auth.admin)):
     sys.exit(0)
 
 
-@app.post("/next")
-async def state(user: User = Depends(auth.admin)):
-    try:
-        return next(game.GAME)
-    except StopIteration:
-        return {}
-
-
 @app.get("/actions")
 async def state(user: User = Depends(auth.admin)):
     return game.GAME.actions()

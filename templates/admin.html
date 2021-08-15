@@ -11,7 +11,6 @@
     <input name="points" placeholder="points"></input>
     <button {{ authheader }} hx-trigger="click, keyup[key=='L']" hx-swap="none" hx-post="/score/left" hx-include="[name='points']">points to [L]</button>
     <button {{ authheader }} hx-trigger="click, keyup[key=='R']" hx-swap="none" hx-post="/score/right" hx-include="[name='points']">points to [R]</button>
-    <button {{ authheader }} hx-trigger="click, keyup[key=='n']" hx-swap="none" hx-post="/next">[n]ext</button>
     <input name="teamname" placeholder="team name"></input>
     <button {{ authheader }} hx-trigger="click" hx-swap="none" hx-post="/name/left" hx-include="[name='teamname']">change name of left team</button>
     <button {{ authheader }} hx-trigger="click" hx-swap="none" hx-post="/name/right" hx-include="[name='teamname']">change name of right team</button>
