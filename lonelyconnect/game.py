@@ -255,7 +255,7 @@ class Question(Task):
             for step in self.steps[: self.n_shown]
         ]
         if self.is_sequences and self.n_shown == 4:
-            steps[-1] = "<span class='questionmark'>?</span>"
+            steps[-1] = {"label": "<span class='questionmark'>?</span>", "type": "text"}
         return {
             "steps": steps,
             "answer": self.answer if self.n_shown == 5 else None,
