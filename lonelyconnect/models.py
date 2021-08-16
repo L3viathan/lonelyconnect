@@ -29,12 +29,3 @@ class User(BaseModel):
             if tokens[token] == self.name:
                 return token
         raise RuntimeError(f"Couldn't find token for user {self.name}")
-
-
-
-class State(BaseModel):
-    """
-    Contains all PUBLIC information about the current game state.
-    """
-    points: dict = {"left": 0, "right": 0}
-    buzz: BuzzState = "inactive"

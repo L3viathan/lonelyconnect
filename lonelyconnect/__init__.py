@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import RedirectResponse
 
 from . import auth, game
-from .models import State, User, BuzzState
+from .models import User, BuzzState
 from .route_ui import subapp as ui_routes
 
 BUZZLOCK = Lock()
@@ -64,7 +64,7 @@ async def startup():
     auth.CODES[code] = "admin"
     try:
         with open("swap.bin", "rb") as f:
-            game.STATE, game.GAME = pickle.load(f)
+            game.GAME = pickle.load(f)
     except FileNotFoundError:
         pass
 
@@ -74,7 +74,7 @@ async def shutdown():
     if CONTROLLED_SHUTDOWN:
         return
     with open("swap.bin", "wb") as f:
-        pickle.dump((game.STATE, game.GAME), f)
+        pickle.dump(game.GAME, f)
 
 
 @app.post("/pair/{username}")
@@ -86,19 +86,13 @@ async def pair(username: str, user: User = Depends(auth.admin)):
 
 @app.post("/load")
 async def load(user: User = Depends(auth.admin), file: bytes = File(...)):
-    game.STATE = State()
-    game.GAME = game.Game(game.STATE)
+    game.GAME = game.Game()
     game.GAME.load(yaml.load(file))
 
 
 @app.get("/codes")
 async def codes(user: User = Depends(auth.admin)):
     return auth.CODES
-
-
-@app.get("/state")
-async def state():
-    return game.STATE
 
 
 @app.get("/stage")
@@ -131,22 +125,20 @@ async def state(key: str, user: User = Depends(auth.admin)):
 @app.post("/buzz")
 async def buzz(user: User = Depends(auth.player)):
     async with BUZZLOCK:
-        if game.STATE.buzz in ("active", f"active-{user.name}"):
-            game.STATE.buzz = user.name
-            game.GAME.buzz(user.name)
-        else:
+        try:
+            return game.GAME.buzz(user.name)
+        except PermissionError:
             raise HTTPException(
                 status_code=409,
                 detail="Can't buzz right now",
             )
-    return game.STATE.buzz
 
 
 @app.put("/buzz/{state}")
 async def set_buzz(state: BuzzState, user: User = Depends(auth.admin)):
     async with BUZZLOCK:
-        game.STATE.buzz = state.value
-    return game.STATE.buzz
+        game.GAME.buzz_state = state.value
+    return game.GAME.buzz_state
 
 
 @app.post("/score/{username}")
@@ -154,7 +146,7 @@ async def add_to_score(
     request: Request, username: str, user: User = Depends(auth.admin)
 ):
     form_data = await request.form()
-    game.STATE.points[username] += int(form_data["points"])
+    game.GAME.points[username] += int(form_data["points"])
 
 
 @app.post("/name/{username}")

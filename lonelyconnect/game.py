@@ -2,14 +2,16 @@ import random
 from time import monotonic
 from collections import deque
 
-from .models import State
-
 
 class Game:
-    def __init__(self, state):
+    def __init__(self):
         self.parts = deque()
         self.part = None
-        self.state = state
+        self.buzz_state = "inactive"
+        self.points = {
+            "left": 0,
+            "right": 0,
+        }
 
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
@@ -33,7 +35,7 @@ class Game:
     def actions(self):
         """Return all available actions at this point in time."""
         if self.part:
-            return self.part.actions(self.state)
+            return self.part.actions()
         elif self.parts:
             return [("next", "Load the next part")]
         return []
@@ -42,7 +44,7 @@ class Game:
         """Perform an action"""
         if self.part:
             try:
-                return self.part.action(key, self.state)
+                return self.part.action(key)
             except StopIteration:
                 if self.parts:
                     self.part = self.parts.popleft()
@@ -56,8 +58,12 @@ class Game:
             raise StopIteration  # FIXME
 
     def buzz(self, who):
-        if self.part:
-            return self.part.buzz(who)
+        if self.buzz_state in ("active", f"active-{who}"):
+            self.buzz_state = user.name
+            self.part.buzz(who)
+            return who
+        else:
+            raise PermissionError
 
 
 class Part:
@@ -79,17 +85,17 @@ class Part:
             return self.task.stage()
         return {"bigscores": True}
 
-    def actions(self, state):
+    def actions(self):
         """Return all available actions at this point in time."""
         if self.task:
-            return self.task.actions(state)
+            return self.task.actions()
         return [("next", "Load the next task")]
 
-    def action(self, key, state):
+    def action(self, key):
         """Perform an action"""
         if self.task:
             try:
-                return self.task.action(key, state)
+                return self.task.action(key)
             except StopIteration:
                 if self.tasks:
                     self.task = self.tasks.popleft()
@@ -102,7 +108,7 @@ class Part:
 
     def buzz(self, who):
         if self.task:
-            return self.task.buzz(who)
+            self.task.buzz(who)
 
 class MissingVowels(Part):
     def __init__(self, game):
@@ -115,13 +121,13 @@ class MissingVowels(Part):
         for group_data in groups:
             self.tasks.append(MissingVowelGroup(group_data, self))
 
-    def action(self, key, state):
+    def action(self, key):
         if key == "next":
             if not self.timer:
                 self.timer = Timer(2 * 60)
             if not self.timer.remaining and self.part and not self.task.clear:
                 raise StopIteration
-        return super().action(key, state)
+        return super().action(key)
 
 
 class Connections(Part):
@@ -147,8 +153,8 @@ class Task:
         self.part = part
 
     @property
-    def state(self):
-        return self.part.game.state
+    def game(self):
+        return self.part.game
 
 
 class MissingVowelGroup(Task):
@@ -184,8 +190,8 @@ class MissingVowelGroup(Task):
             )
         return stage_data
 
-    def actions(self, state):
-        if self.state.buzz in ("left", "right") and not self.clear:
+    def actions(self):
+        if self.game.buzz_state in ("left", "right") and not self.clear:
             return [
                 ("award_primary", "Give a point to the buzzing team"),
                 ("punish_primary", "Take a point from the buzzing team"),
@@ -201,14 +207,14 @@ class MissingVowelGroup(Task):
                 ("next", "Resolve clue")
             ]
 
-    def action(self, key, state):
-        if key not in [k for (k, _desc) in self.actions(state)]:
+    def action(self, key):
+        if key not in [k for (k, _desc) in self.actions()]:
             return None
         if key == "next":
             if self.phrases and (not self.phrase or self.clear):
                 self.phrase = self.phrases.popleft()
                 self.clear = False
-                self.state.buzz = "active"
+                self.game.buzz_state = "active"
             elif not self.clear:
                 self.clear = True
             else:
@@ -216,10 +222,10 @@ class MissingVowelGroup(Task):
         else:
             kind, _, team_id = key.partition("_")
             if team_id == "primary":
-                team = self.state.buzz
+                team = self.game.buzz_state
             else:
-                team = "right" if self.state.buzz == "left" else "left"
-            state.points[team] += 1 if kind == "award" else -1
+                team = "right" if self.game.buzz_state == "left" else "left"
+            self.game.points[team] += 1 if kind == "award" else -1
 
 class Question(Task):
     def __init__(self, task_data, part, is_sequences=False):
@@ -245,8 +251,8 @@ class Question(Task):
         }
 
     def stage(self):
-        if self.timer and not self.timer.remaining and self.state.buzz != "inactive":
-            self.state.buzz = "inactive"
+        if self.timer and not self.timer.remaining and self.game.buzz_state != "inactive":
+            self.game.buzz_state = "inactive"
         steps = [
             {
                 key: getattr(step, key)
@@ -402,5 +408,4 @@ PART_TYPES = {
     "missing vowels": MissingVowels,
 }
 
-STATE = State()
-GAME = Game(STATE)
+GAME = Game()
