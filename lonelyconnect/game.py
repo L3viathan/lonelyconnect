@@ -232,6 +232,10 @@ class Question(Task):
         self.n_shown = 0
         self.timer = None
 
+    @property
+    def clear(self):
+        return self.n_shown > 4
+
     def secrets(self):
         return {
             "step_explanations": [
@@ -243,7 +247,13 @@ class Question(Task):
     def stage(self):
         if self.timer and not self.timer.remaining and self.state.buzz != "inactive":
             self.state.buzz = "inactive"
-        steps = [step.label for step in self.steps[: self.n_shown]]
+        steps = [
+            {
+                key: getattr(step, key)
+                for key in (("label", "type", "explanation") if self.clear else ("label", "type"))
+            }
+            for step in self.steps[: self.n_shown]
+        ]
         if self.is_sequences and self.n_shown == 4:
             steps[-1] = "<span class='questionmark'>?</span>"
         return {
@@ -251,6 +261,7 @@ class Question(Task):
             "answer": self.answer if self.n_shown == 5 else None,
             "time_remaining": self.timer and self.timer.remaining_round,
             "time_total": self.timer and self.timer.duration,
+            "clear": self.clear,
         }
 
     def actions(self, state):
@@ -359,6 +370,7 @@ class Step:
     def __init__(self, step_data):
         self.label = step_data["label"]
         self.explanation = step_data.get("explanation")
+        self.type = step_data.get("type", "text")
 
 
 class Timer:

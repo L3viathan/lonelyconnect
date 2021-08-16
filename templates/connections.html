@@ -5,7 +5,7 @@
         {% endif %}
         <div id="steps">
         {% for step in steps %}
-            <button class="step">{{ step | safe }}</button>
+        <button class="step"{% if step.type == "image" %} style="background: url('/static/{{ step.label }}'); background-repeat: no-repeat; background-position: center; background-size: cover;"{% endif %}>{% if step.type == "text" %}{{ step.label | safe }}{% elif step.type == "image" and clear %}{{ step.explanation }}{% endif %}</button>
         {% endfor %}
         </div>
 {% endblock %}
