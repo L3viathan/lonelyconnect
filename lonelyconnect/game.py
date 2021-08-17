@@ -111,6 +111,7 @@ class Part:
         if self.task:
             self.task.buzz(who)
 
+
 class MissingVowels(Part):
     def __init__(self, game):
         super().__init__(game)
@@ -200,13 +201,9 @@ class MissingVowelGroup(Task):
                 ("punish_secondary", "Take a point from the other team"),
             ]
         elif self.clear:
-            return [
-                ("next", "Go to the next clue")
-            ]
+            return [("next", "Go to the next clue")]
         else:
-            return [
-                ("next", "Resolve clue")
-            ]
+            return [("next", "Resolve clue")]
 
     def action(self, key):
         if key not in [k for (k, _desc) in self.actions()]:
@@ -227,6 +224,7 @@ class MissingVowelGroup(Task):
             else:
                 team = "right" if self.game.buzz_state == "left" else "left"
             self.game.points[team] += 1 if kind == "award" else -1
+
 
 class Question(Task):
     def __init__(self, task_data, part, is_sequences=False):
@@ -252,12 +250,20 @@ class Question(Task):
         }
 
     def stage(self):
-        if self.timer and not self.timer.remaining and self.game.buzz_state != "inactive":
+        if (
+            self.timer
+            and not self.timer.remaining
+            and self.game.buzz_state != "inactive"
+        ):
             self.game.buzz_state = "inactive"
         steps = [
             {
                 key: getattr(step, key)
-                for key in (("label", "type", "explanation") if self.clear else ("label", "type"))
+                for key in (
+                    ("label", "type", "explanation")
+                    if self.clear
+                    else ("label", "type")
+                )
             }
             for step in self.steps[: self.n_shown]
         ]
@@ -296,11 +302,7 @@ class Question(Task):
             )
         if self.n_shown < 4 and self.timer and not self.timer.remaining:
             self.n_shown = 4
-        if (
-            self.n_shown == 4
-            and self.timer
-            and not self.timer.remaining
-        ):
+        if self.n_shown == 4 and self.timer and not self.timer.remaining:
             # other team didn't buzz, but we showed all
             available.extend(
                 [

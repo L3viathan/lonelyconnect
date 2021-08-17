@@ -186,6 +186,7 @@ def test_stage_and_secrets_and_actions(game):
         "no_points",
     }
 
+
 def test_buzz_timer(game):
     game.action("next")  # load part
     game.action("next")  # load question
