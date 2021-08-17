@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "lonelyconnect"
+version = "0.1.0"
+description = ""
+authors = ["L3viathan <git@l3vi.de>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+PyYAML = "^5.4.1"
+fastapi = "^0.68.0"
+Jinja2 = "^3.0.1"
+MarkupSafe = "^2.0.1"
+aiofiles = "^0.7.0"
+python-multipart = "^0.0.5"
+uvicorn = "^0.15.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+freezegun = "^1.1.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

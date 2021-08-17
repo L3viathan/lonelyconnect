@@ -1,6 +1,0 @@
-fastapi
-markupsafe
-aiofiles
-pyyaml
-jinja2
-python-multipart
