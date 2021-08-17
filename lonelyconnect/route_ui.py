@@ -24,7 +24,9 @@ async def ui_stage(request: Request):
         **stage,
     }
 
-    if game.GAME.part and isinstance(game.GAME.part, (game.Connections, game.Sequences)):
+    if game.GAME.part and isinstance(
+        game.GAME.part, (game.Connections, game.Sequences)
+    ):
         return templates.TemplateResponse(
             "connections.html",
             base_dict,

@@ -3,6 +3,7 @@ from collections import Counter
 from typing import Literal, Optional
 from pydantic import BaseModel
 
+
 class BuzzState(Enum):
     inactive = "inactive"
     active = "active"

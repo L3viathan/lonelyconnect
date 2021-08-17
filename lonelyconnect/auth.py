@@ -23,6 +23,7 @@ def logged_in(token: str = Depends(oauth2_scheme)):
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 def player(token: str = Depends(oauth2_scheme)):
     user = logged_in(token)
     if not user.is_player:
@@ -32,6 +33,7 @@ def player(token: str = Depends(oauth2_scheme)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
 
 def admin(token: str = Depends(oauth2_scheme)):
     user = logged_in(token)
