@@ -50,17 +50,18 @@ class Game:
                     self.part = self.parts.popleft()
                 else:
                     self.part = None
-            except TypeError: #???
-                self.part = self.parts.popleft()
+            # except TypeError: #???
+            #     self.part = self.parts.popleft()
         elif key == "next" and self.parts:
             self.part = self.parts.popleft()
         else:
-            raise StopIteration  # FIXME
+            return None
 
     def buzz(self, who):
         if self.buzz_state in ("active", f"active-{who}"):
-            self.buzz_state = user.name
-            self.part.buzz(who)
+            if self.part:
+                self.part.buzz(who)
+            self.buzz_state = who
             return who
         else:
             raise PermissionError
@@ -270,7 +271,7 @@ class Question(Task):
             "clear": self.clear,
         }
 
-    def actions(self, state):
+    def actions(self):
         """Return all available actions at this point in time."""
         available = []
         if self.n_shown > 4:
@@ -284,7 +285,7 @@ class Question(Task):
             )
         else:
             available.extend([("next", "Show the next clue")])
-        if state.buzz in ("left", "right"):
+        if self.game.buzz_state in ("left", "right"):
             # can only award if they buzzed
             available.extend(
                 [
@@ -293,9 +294,10 @@ class Question(Task):
                     ("no_points", "No points for either team"),
                 ],
             )
+        if self.n_shown < 4 and self.timer and not self.timer.remaining:
+            self.n_shown = 4
         if (
-            not available
-            and self.n_shown == 4
+            self.n_shown == 4
             and self.timer
             and not self.timer.remaining
         ):
@@ -310,35 +312,37 @@ class Question(Task):
 
     def buzz(self, who):
         if self.timer:
+            if not self.timer.remaining:
+                raise PermissionError
             self.timer.freeze()
-        self.active_team = who
+        # self.active_team = who  # shouldn't be neccessary
 
-    def action(self, key, state):
+    def action(self, key):
         """Perform an action"""
-        if key not in [k for (k, _desc) in self.actions(state)]:
+        if key not in [k for (k, _desc) in self.actions()]:
             return None
         if key.startswith("start_"):
             _, __, team = key.partition("_")
             self.active_team = team
             self.n_shown += 1
-            state.buzz = f"active-{team}"
+            self.game.buzz_state = f"active-{team}"
             self.timer = Timer(30)
         elif key.startswith("award_"):
             team = self.active_team
             if not team:
                 raise RuntimeError("unknown active team")
             if key == "award_primary":
-                state.points[team] += {1: 5, 2: 3, 3: 2, 4: 1}[self.n_shown]
+                self.game.points[team] += {1: 5, 2: 3, 3: 2, 4: 1}[self.n_shown]
             elif key == "award_bonus":
-                state.points["left" if team == "right" else "right"] += 1
+                self.game.points["left" if team == "right" else "right"] += 1
             else:
                 raise RuntimeError("unknown award_ key")
             self.n_shown = 5
-            state.buzz = "inactive"
+            self.game.buzz_state = "inactive"
             self.active_team = None
         elif key == "no_points":
             self.n_shown = 5
-            state.buzz = "inactive"
+            self.game.buzz_state = "inactive"
             self.active_team = None
         elif key == "next":
             if self.n_shown == 1:
