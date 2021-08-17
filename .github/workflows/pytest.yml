@@ -29,4 +29,4 @@ jobs:
       uses: psf/black@stable
     - name: Run tests
       run: |
-        pytest test
+        poetry run pytest test
