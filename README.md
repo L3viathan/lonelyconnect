@@ -1,5 +1,7 @@
 # LonelyConnect
 
+[![pytest](https://github.com/L3viathan/lonelyconnect/actions/workflows/pytest.yml/badge.svg)](https://github.com/L3viathan/lonelyconnect/actions/workflows/pytest.yml)
+
 This is a fan-made implementation of the BBC quiz show OnlyConnect. It
 allows you to write your own riddles and host your own show at home. For partly
 technical and partly gameplay reasons, round 3 (the connecting wall) is not
@@ -38,3 +40,5 @@ state (who is allowed to buzz/who has buzzed) will be automatically set through
 the game logic.
 
 To start a game, the admin can load a game file.
+
+Afterwards, the admin interface is usable through numeric keyboard shortcuts (as displayed on the dashboard).
