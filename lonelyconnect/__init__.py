@@ -2,7 +2,13 @@ import os
 import sys
 import random
 import pickle
+import warnings
 from asyncio import Lock
+
+# starlette's use of Jinja2 causes a warning
+warnings.filterwarnings(
+    action="ignore", category=DeprecationWarning, module=r".*starlette"
+)
 
 import yaml
 
@@ -87,7 +93,7 @@ async def pair(username: str, user: User = Depends(auth.admin)):
 @app.post("/load")
 async def load(user: User = Depends(auth.admin), file: bytes = File(...)):
     game.GAME = game.Game()
-    game.GAME.load(yaml.load(file))
+    game.GAME.load(yaml.load(file, Loader=yaml.SafeLoader))
 
 
 @app.get("/codes")
