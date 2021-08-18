@@ -11,6 +11,7 @@ warnings.filterwarnings(
 )
 
 import yaml
+import uvicorn
 
 from fastapi import FastAPI, Depends, HTTPException, Request, Response, File
 from fastapi.security import OAuth2PasswordRequestForm
@@ -28,6 +29,10 @@ CONTROLLED_SHUTDOWN = False
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/ui", ui_routes)
+
+
+def entrypoint():
+    return uvicorn.run("lonelyconnect:app", host="0.0.0.0", port=8000, log_level="info")
 
 
 @app.get("/")
