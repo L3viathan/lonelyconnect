@@ -94,6 +94,10 @@ def test_ui_login(requests):
 
 
 def test_ui_admin(requests, admin_token, player_token):
-    assert requests.get("/ui/admin", headers={"Authorization": f"Bearer {admin_token}"}).ok
+    assert requests.get(
+        "/ui/admin", headers={"Authorization": f"Bearer {admin_token}"}
+    ).ok
 
-    assert not requests.get("/ui/admin", headers={"Authorization": f"Bearer {player_token}"}).ok
+    assert not requests.get(
+        "/ui/admin", headers={"Authorization": f"Bearer {player_token}"}
+    ).ok
