@@ -101,3 +101,17 @@ def test_ui_admin(requests, admin_token, player_token):
     assert not requests.get(
         "/ui/admin", headers={"Authorization": f"Bearer {player_token}"}
     ).ok
+
+
+def test_ui_buzzer(requests, admin_token, player_token):
+    assert not requests.get(
+        "/ui/buzzer", headers={"Authorization": f"Bearer {admin_token}"}
+    ).ok
+
+    game.GAME.buzz_state = "inactive"
+    r = requests.get("/ui/buzzer", headers={"Authorization": f"Bearer {player_token}"})
+    assert r.text.count("disabled") == 2
+
+    game.GAME.buzz_state = "active"
+    r = requests.get("/ui/buzzer", headers={"Authorization": f"Bearer {player_token}"})
+    assert r.text.count("disabled") == 1

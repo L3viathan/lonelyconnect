@@ -51,13 +51,13 @@ async def ui_buzzer(request: Request, user: User = Depends(auth.player)):
         {
             "request": request,
             "disabled": ""
-            if game.STATE.buzz in ("active", "left", "right")
+            if game.GAME.buzz_state in ("active", "left", "right")
             else "disabled",  # user.name) else "disabled",
             "buzz_state": (
                 "buzzed"
-                if game.STATE.buzz == user.name
+                if game.GAME.buzz_state == user.name
                 else "buzzable"
-                if game.STATE.buzz in ("active", f"active-{user.name}")
+                if game.GAME.buzz_state in ("active", f"active-{user.name}")
                 else "inactive"
             ),
             **game.GAME.stage(),
