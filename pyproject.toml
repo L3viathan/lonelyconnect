@@ -24,6 +24,7 @@ uvicorn = "^0.15.0"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 freezegun = "^1.1.0"
+requests = "^2.26.0"
 
 [tool.poetry.scripts]
 lonelyconnect = "lonelyconnect:entrypoint"
