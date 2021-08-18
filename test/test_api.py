@@ -77,3 +77,23 @@ def test_roles(requests, admin_token, player_token):
     assert requests.post(
         "/buzz", headers={"Authorization": f"Bearer {player_token}"}
     ).ok
+
+
+def test_ui_redirect(requests, admin_token, player_token):
+    r = requests.post("/ui/redirect", data={"access_token": admin_token})
+    assert "/ui/admin" in r.text
+    assert "/ui/buzzer" not in r.text
+
+    r = requests.post("/ui/redirect", data={"access_token": player_token})
+    assert "/ui/admin" not in r.text
+    assert "/ui/buzzer" in r.text
+
+
+def test_ui_login(requests):
+    assert requests.get("/ui/login").ok
+
+
+def test_ui_admin(requests, admin_token, player_token):
+    assert requests.get("/ui/admin", headers={"Authorization": f"Bearer {admin_token}"}).ok
+
+    assert not requests.get("/ui/admin", headers={"Authorization": f"Bearer {player_token}"}).ok
