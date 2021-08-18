@@ -13,6 +13,10 @@ class Game:
             "right": 0,
         }
 
+    @property
+    def is_done(self):
+        return not self.parts and not self.part
+
     def load(self, game_data):
         """Given data from a file, load questions or whatever exists in this game"""
         for part_data in game_data["parts"]:

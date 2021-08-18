@@ -82,7 +82,7 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    if CONTROLLED_SHUTDOWN:
+    if CONTROLLED_SHUTDOWN or game.GAME.is_done:
         return
     with open("swap.bin", "wb") as f:
         pickle.dump(game.GAME, f)
