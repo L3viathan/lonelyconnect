@@ -19,8 +19,8 @@ async def ui_stage(request: Request):
         "request": request,
         "leftname": auth.USERS["left"].descriptive_name or "left",
         "rightname": auth.USERS["right"].descriptive_name or "right",
-        "leftscore": game.STATE.points["left"],
-        "rightscore": game.STATE.points["right"],
+        "leftscore": game.GAME.points["left"],
+        "rightscore": game.GAME.points["right"],
         **stage,
     }
 
