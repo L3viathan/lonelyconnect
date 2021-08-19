@@ -18,9 +18,10 @@ def game():
                 parts:
                   - type: connections
                     questions:"""
-                + (
-                    """
-                X   - answer: The answer
+                + textwrap.indent(
+                    (
+                        """
+                    - answer: The answer
                       explanation: This would show extra info about the answer
                       steps:
                       - explanation: Explanation 1
@@ -32,9 +33,11 @@ def game():
                       - explanation: Explanation 4
                         label: Hint 4
                     """
-                    * 3
+                        * 3
+                    ),
+                    "    ",
                 )
-            ).replace("X", " "),
+            ),
             Loader=yaml.SafeLoader,
         ),
     )
