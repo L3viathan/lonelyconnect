@@ -116,6 +116,7 @@ def test_ui_buzzer(requests, admin_token, player_token):
     r = requests.get("/ui/buzzer", headers={"Authorization": f"Bearer {player_token}"})
     assert r.text.count("disabled") == 1
 
+
 def test_ui_stage(requests, sample_game):
     game.GAME = sample_game
     game.GAME.points["left"] = 23
