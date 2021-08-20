@@ -109,7 +109,7 @@ class Part:
             raise StopIteration  # out of tasks
 
     def buzz(self, who):
-        if self.task:
+        if self.task and hasattr(self.task, "buzz"):
             self.task.buzz(who)
 
 
@@ -128,7 +128,7 @@ class MissingVowels(Part):
         if key == "next":
             if not self.timer:
                 self.timer = Timer(2 * 60)
-            if not self.timer.remaining and self.part and not self.task.clear:
+            if not self.timer.remaining and not self.task.clear:
                 raise StopIteration
         return super().action(key)
 

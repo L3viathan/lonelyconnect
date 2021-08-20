@@ -167,3 +167,41 @@ def test_ui_end2end(requests, admin_token, player_token):
         assert requests.post(
             f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
         ).ok
+        # now we see the answer
+        assert requests.post(
+            f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
+        ).ok
+        # now we see the first clue
+        stage = requests.get("/ui/stage").text
+        answer = game.GAME.part.task.phrase.answer
+        assert game.obfuscate(answer).replace(" ", "") in stage.replace(" ", "")
+        assert (
+            answer
+            in requests.get(
+                "/ui/admin", headers={"Authorization": f"Bearer {admin_token}"}
+            ).text
+        )
+        assert requests.post(
+            f"/buzz", headers={"Authorization": f"Bearer {player_token}"}
+        ).ok
+        assert requests.post(
+            f"/action/punish_primary",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        ).ok
+        assert requests.post(
+            f"/action/fake", headers={"Authorization": f"Bearer {admin_token}"}
+        ).ok
+        while game.GAME.part.tasks and "next" in game.GAME.actions():
+            assert requests.post(
+                f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
+            ).ok
+        assert requests.post(
+            f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
+        ).ok
+        assert requests.post(
+            f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
+        ).ok
+        t.tick(999)
+        assert requests.post(
+            f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
+        ).ok
