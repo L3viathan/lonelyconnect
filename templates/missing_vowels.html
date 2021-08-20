@@ -1,0 +1,11 @@
+{% extends "stage.html" %}
+{% block main %}
+        {% if name %}
+        <div id="answer">{{ name }}</div>
+        {% endif %}
+        {% if phrase %}
+        <div id="steps">
+            <button class="step wide">{{ phrase | safe }}</button>
+        </div>
+        {% endif %}
+{% endblock %}
