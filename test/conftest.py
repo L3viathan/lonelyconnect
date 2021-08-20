@@ -1,4 +1,5 @@
 import asyncio
+import os
 import textwrap
 
 import pytest
@@ -47,6 +48,7 @@ def sample_game():
 @pytest.fixture(scope="session")
 def requests():
     client = TestClient(app)
+    os.environ["lonelyconnect_no_swap"] = "1"
     asyncio.run(startup())
     yield client
     asyncio.run(shutdown())

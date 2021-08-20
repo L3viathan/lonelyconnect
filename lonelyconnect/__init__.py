@@ -73,6 +73,8 @@ async def startup():
         code = random_token(6)
         print("admin code:", code)
     auth.CODES[code] = "admin"
+    if os.environ.get("lonelyconnect_no_swap"):
+        return
     try:
         with open("swap.bin", "rb") as f:
             game.GAME = pickle.load(f)
@@ -82,7 +84,7 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    if CONTROLLED_SHUTDOWN or game.GAME.is_done:
+    if CONTROLLED_SHUTDOWN or game.GAME.is_done or os.environ.get("lonelyconnect_no_swap"):
         return
     with open("swap.bin", "wb") as f:
         pickle.dump(game.GAME, f)
