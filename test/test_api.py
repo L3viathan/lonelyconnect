@@ -1,49 +1,6 @@
-import asyncio
-
 import pytest
-from fastapi.testclient import TestClient
 
-from lonelyconnect import app, auth, startup, game, shutdown
-
-
-@pytest.fixture(scope="session")
-def requests():
-    client = TestClient(app)
-    asyncio.run(startup())
-    yield client
-    asyncio.run(shutdown())
-
-
-@pytest.fixture(scope="session")
-def admin_token(requests):
-    admin = auth.USERS["admin"]
-    code = admin.get_token(auth.CODES)
-    r = requests.post(
-        "/login",
-        data={"grant_type": "password", "username": "nobody", "password": "wrong"},
-        headers={"HX-Request": "true"},
-    )
-    assert not r.ok
-    r = requests.post(
-        "/login",
-        data={"grant_type": "password", "username": "nobody", "password": code},
-        headers={"HX-Request": "true"},
-    )
-    assert r.ok
-    yield r.json()["access_token"]
-
-
-@pytest.fixture(scope="session")
-def player_token(requests, admin_token):
-    r = requests.post("/pair/right", headers={"Authorization": f"Bearer {admin_token}"})
-    code = r.json()
-    r = requests.post(
-        "/login",
-        data={"grant_type": "password", "username": "nobody", "password": code},
-        headers={"HX-Request": "true"},
-    )
-    assert r.ok
-    yield r.json()["access_token"]
+from lonelyconnect import game
 
 
 def test_auth(requests, admin_token):
@@ -77,54 +34,3 @@ def test_roles(requests, admin_token, player_token):
     assert requests.post(
         "/buzz", headers={"Authorization": f"Bearer {player_token}"}
     ).ok
-
-
-def test_ui_redirect(requests, admin_token, player_token):
-    r = requests.post("/ui/redirect", data={"access_token": admin_token})
-    assert "/ui/admin" in r.text
-    assert "/ui/buzzer" not in r.text
-
-    r = requests.post("/ui/redirect", data={"access_token": player_token})
-    assert "/ui/admin" not in r.text
-    assert "/ui/buzzer" in r.text
-
-
-def test_ui_login(requests):
-    assert requests.get("/ui/login").ok
-
-
-def test_ui_admin(requests, admin_token, player_token):
-    assert requests.get(
-        "/ui/admin", headers={"Authorization": f"Bearer {admin_token}"}
-    ).ok
-
-    assert not requests.get(
-        "/ui/admin", headers={"Authorization": f"Bearer {player_token}"}
-    ).ok
-
-
-def test_ui_buzzer(requests, admin_token, player_token):
-    assert not requests.get(
-        "/ui/buzzer", headers={"Authorization": f"Bearer {admin_token}"}
-    ).ok
-
-    game.GAME.buzz_state = "inactive"
-    r = requests.get("/ui/buzzer", headers={"Authorization": f"Bearer {player_token}"})
-    assert r.text.count("disabled") == 2
-
-    game.GAME.buzz_state = "active"
-    r = requests.get("/ui/buzzer", headers={"Authorization": f"Bearer {player_token}"})
-    assert r.text.count("disabled") == 1
-
-
-def test_ui_stage(requests, sample_game):
-    game.GAME = sample_game
-    game.GAME.points["left"] = 23
-
-    r = requests.get("/ui/stage")
-    assert "23" in r.text
-
-    game.GAME.action("next")
-    game.GAME.action("next")
-    r = requests.get("/ui/stage")
-    assert "<br>" in r.text

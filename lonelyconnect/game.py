@@ -77,9 +77,6 @@ class Part:
         self.task = None
         self.tasks = deque()
 
-    def load(self, part_data):
-        raise NotImplementedError
-
     def secrets(self):
         if self.task:
             return self.task.secrets()
@@ -333,16 +330,12 @@ class Question(Task):
             self.n_shown += 1
             self.game.buzz_state = f"active-{team}"
             self.timer = Timer(30)
-        elif key.startswith("award_"):
+        elif key in ("award_primary", "award_bonus"):
             team = self.active_team
-            if not team:
-                raise RuntimeError("unknown active team")
             if key == "award_primary":
                 self.game.points[team] += {1: 5, 2: 3, 3: 2, 4: 1}[self.n_shown]
-            elif key == "award_bonus":
-                self.game.points["left" if team == "right" else "right"] += 1
             else:
-                raise RuntimeError("unknown award_ key")
+                self.game.points["left" if team == "right" else "right"] += 1
             self.n_shown = 5
             self.game.buzz_state = "inactive"
             self.active_team = None

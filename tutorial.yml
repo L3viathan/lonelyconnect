@@ -37,7 +37,7 @@ parts:
       - explanation: Since 1952
         label: "2: Elizabeth"
     - answer: First words in Bona Nox cues
-      explanation: 
+      explanation: sometimes sanitized to kugelrund, but Pfui doesn't make sense then
       steps:
       - explanation: nox, bist a rechter Ochs, bona
         label: Bona
@@ -59,7 +59,8 @@ parts:
       phrases:
       - Wingardium Leviosa
       - Tarantallegra
-      - Avada Kedavra
+      - answer: Avada Kedavra
+        obfuscated: vdk vr
       - Accio
       - Aguamenti
       - Amato Animo Animato Animagus
