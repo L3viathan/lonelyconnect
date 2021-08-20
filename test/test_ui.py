@@ -1,8 +1,9 @@
 import yaml
 
 import freezegun
+import uvicorn
 
-from lonelyconnect import game
+from lonelyconnect import game, entrypoint
 
 
 def test_ui_redirect(requests, admin_token, player_token):
@@ -59,7 +60,11 @@ def test_ui_stage(requests, sample_game):
 def test_ui_end2end(requests, admin_token, player_token):
     game.GAME = game.Game()
     with open("tutorial.yml") as f:
-        game.GAME.load(yaml.load(f, Loader=yaml.SafeLoader))
+        requests.post(
+            "/load",
+            files={"file": f},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
 
     # Connections
     assert requests.post(
@@ -205,3 +210,32 @@ def test_ui_end2end(requests, admin_token, player_token):
         assert requests.post(
             f"/action/next", headers={"Authorization": f"Bearer {admin_token}"}
         ).ok
+    assert requests.get("/stage").json() == {
+        "bigscores": True,
+        "buzz_state": "right",
+        "points": {"left": 0, "right": -1},
+    }
+    assert (
+        requests.get(
+            "/secrets", headers={"Authorization": f"Bearer {admin_token}"}
+        ).json()
+        == {}
+    )
+    assert (
+        requests.get(
+            "/actions", headers={"Authorization": f"Bearer {admin_token}"}
+        ).json()
+        == []
+    )
+
+
+def test_index_redirect(requests):
+    r = requests.get("/", allow_redirects=False)
+    assert r.status_code == 307
+    assert r.headers == {"location": "/ui/login"}
+
+
+def test_the_rest(monkeypatch):
+    # 100% coverage %)
+    monkeypatch.setattr(uvicorn, "run", lambda *a, **k: 42)
+    assert entrypoint() == 42

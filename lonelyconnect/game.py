@@ -32,9 +32,10 @@ class Game:
 
     def stage(self):
         """Return data for the current stage."""
+        base = {"points": self.points, "buzz_state": self.buzz_state}
         if self.part:
-            return self.part.stage()
-        return {"bigscores": True}
+            return {**base, **self.part.stage()}
+        return {"bigscores": True, **base}
 
     def actions(self):
         """Return all available actions at this point in time."""

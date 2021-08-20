@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from lonelyconnect import game, startup, shutdown
+from lonelyconnect import game, startup, shutdown, auth
 
 
 def test_auth(requests, admin_token):
@@ -69,3 +69,25 @@ def test_swap_file(sample_game):
     del game.GAME.arbitrary
     if original:
         os.environ["lonelyconnect_no_swap"] = original
+
+
+def test_various_admin_functions(requests, admin_token, sample_game):
+    game.GAME = sample_game
+    assert game.GAME.buzz_state == "inactive"
+    requests.put("/buzz/active", headers={"Authorization": f"Bearer {admin_token}"})
+    assert game.GAME.buzz_state == "active"
+
+    requests.post(
+        "/score/left",
+        data={"points": 23},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert game.GAME.points["left"] == 23
+
+    assert not auth.USERS["right"].descriptive_name
+    requests.post(
+        "/name/right",
+        data={"teamname": "foobar"},
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert auth.USERS["right"].descriptive_name == "FOOBAR"

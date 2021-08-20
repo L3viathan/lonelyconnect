@@ -78,11 +78,19 @@ def test_connections(sample_game):
 
 
 def test_stage_and_secrets_and_actions(sample_game):
-    assert sample_game.stage() == {"bigscores": True}
+    assert sample_game.stage() == {
+        "bigscores": True,
+        "buzz_state": "inactive",
+        "points": {"left": 0, "right": 0},
+    }
     assert sample_game.secrets() == {}
     assert set(dict(sample_game.actions())) == {"next"}
     sample_game.action("next")  # load part
-    assert sample_game.stage() == {"bigscores": True}
+    assert sample_game.stage() == {
+        "bigscores": True,
+        "buzz_state": "inactive",
+        "points": {"left": 0, "right": 0},
+    }
     assert sample_game.secrets() == {}
     assert set(dict(sample_game.actions())) == {"next"}
     sample_game.action("next")  # load question
@@ -92,6 +100,8 @@ def test_stage_and_secrets_and_actions(sample_game):
         "steps": [],
         "time_remaining": None,
         "time_total": None,
+        "buzz_state": "inactive",
+        "points": {"left": 0, "right": 0},
     }
     assert sample_game.secrets() == {
         "explanation": "This would show extra info about the answer",
@@ -105,6 +115,8 @@ def test_stage_and_secrets_and_actions(sample_game):
         "steps": [{"label": "Hint 1", "type": "text"}],
         "time_remaining": 29,
         "time_total": 30,
+        "buzz_state": "active-left",
+        "points": {"left": 0, "right": 0},
     }
     assert sample_game.secrets() == {
         "explanation": "This would show extra info about the answer",
@@ -121,6 +133,8 @@ def test_stage_and_secrets_and_actions(sample_game):
         ],
         "time_remaining": 29,
         "time_total": 30,
+        "buzz_state": "active-left",
+        "points": {"left": 0, "right": 0},
     }
     assert sample_game.secrets() == {
         "explanation": "This would show extra info about the answer",
@@ -137,6 +151,8 @@ def test_stage_and_secrets_and_actions(sample_game):
         ],
         "time_remaining": 29,
         "time_total": 30,
+        "buzz_state": "left",
+        "points": {"left": 0, "right": 0},
     }
     assert sample_game.secrets() == {
         "explanation": "This would show extra info about the answer",

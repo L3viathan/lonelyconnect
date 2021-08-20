@@ -24,7 +24,6 @@ from .models import User, BuzzState
 from .route_ui import subapp as ui_routes
 
 BUZZLOCK = Lock()
-CONTROLLED_SHUTDOWN = False
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -85,8 +84,7 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     if (
-        CONTROLLED_SHUTDOWN
-        or game.GAME.is_done
+        game.GAME.is_done
         or os.environ.get("lonelyconnect_no_swap")
     ):
         return
@@ -120,13 +118,6 @@ async def stage():
 @app.get("/secrets")
 async def secrets(user: User = Depends(auth.admin)):
     return game.GAME.secrets()
-
-
-@app.post("/shutdown")
-async def secrets(user: User = Depends(auth.admin)):
-    global CONTROLLED_SHUTDOWN
-    CONTROLLED_SHUTDOWN = True
-    sys.exit(0)
 
 
 @app.get("/actions")
