@@ -83,10 +83,7 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    if (
-        game.GAME.is_done
-        or os.environ.get("lonelyconnect_no_swap")
-    ):
+    if game.GAME.is_done or os.environ.get("lonelyconnect_no_swap"):
         return
     with open("swap.bin", "wb") as f:
         pickle.dump(game.GAME, f)
